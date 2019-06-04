@@ -56,7 +56,8 @@ lmerSeq.fit <- function(expr_mat=NULL, # matrix of transformed RNA-Seq counts wh
   # Gene Names
   if(is.null(gene_names)){
     if(is.null(rownames(expr_mat))==T){rownames(expr_mat)<-seq(1,nrow(expr_mat),1)}
-    gene_names = rownames(expr_mat)}
+    gene_names = rownames(expr_mat)
+  }
 
 
   ############################################################################################################
@@ -71,11 +72,11 @@ lmerSeq.fit <- function(expr_mat=NULL, # matrix of transformed RNA-Seq counts wh
   ret <- pbapply::pblapply(X = 1:nrow(expr_mat), FUN = function(i){
     dat_sub <- cbind(sample_data, data.frame(expr = as.numeric(expr_mat[i, ])))
     ret_sub <- tryCatch({
-      tmp1 <- lmerTest::lmer(formula = form_sub, data = dat_sub, REML = REML)
+      tmp1 <- suppressMessages(lmerTest::lmer(formula = form_sub, data = dat_sub, REML = REML))
     }, error = function(e) {
       ret_sub2 <- NA
     })
   })
-  ret$gene_names = gene_names
-  return(ret)
+  ret2 <- list(fitted_models = ret, gene_names = gene_names)
+  return(ret2)
 }
