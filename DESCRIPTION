@@ -9,6 +9,8 @@ License: GPL-2
 Encoding: UTF-8
 LazyData: true
 Imports: pbapply,
-        lmerTest
+        lmerTest,
+        gtools,
+        dplyr
 URL: https//github.com/stop-pre16/lmerSeq
 RoxygenNote: 6.1.1

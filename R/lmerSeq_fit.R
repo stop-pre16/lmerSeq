@@ -76,7 +76,7 @@ lmerSeq.fit <- function(expr_mat=NULL, # matrix of transformed RNA-Seq counts wh
     }, error = function(e) {
       ret_sub2 <- NA
     })
+    ret2 <- list(fit = ret_sub, gene = gene_names[i])
   })
-  ret2 <- list(fitted_models = ret, gene_names = gene_names)
-  return(ret2)
+  return(ret)
 }

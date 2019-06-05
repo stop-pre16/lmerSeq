@@ -6,7 +6,13 @@
 #'
 #'
 #' @importFrom lmerTest lmer
+#' @importFrom lmerTest contest
 #' @importFrom pbapply pblapply
+#' @importFrom stats p.adjust
+#' @importFrom dplyr mutate
+#' @importFrom dplyr arrange
+#' @importFrom gtools smartbind
+#'
 #'
 #' @docType package
 #' @name lmerSeq-pkg
