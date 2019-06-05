@@ -4,7 +4,9 @@
 #' Fitting utilities for estimating linear mixed models for use
 #' with RNA-Seq data from studies with clustered/longitudinal study designs
 #'
-#'
+#' @importFrom lme4 fixef
+#' @importFrom lme4 isSingular
+#' @importFrom magrittr %>%
 #' @importFrom lmerTest lmer
 #' @importFrom lmerTest contest
 #' @importFrom pbapply pblapply

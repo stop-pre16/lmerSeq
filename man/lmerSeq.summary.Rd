@@ -10,7 +10,7 @@ lmerSeq.summary(lmerSeq_results = NULL, coefficient = NULL,
 \arguments{
 \item{lmerSeq_results}{Results object from running lmerSeq.fit}
 
-\item{coefficient}{Character string or numeric indicator of which coefficient or contrast to summarize}
+\item{coefficient}{Character string or numeric indicator of which coefficient to summarize}
 
 \item{p_adj_method}{Method for adjusting for multiple comparisons (default is Benjamini-Hochberg). See p.adjust.methods}
 

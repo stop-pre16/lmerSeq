@@ -11,6 +11,8 @@ LazyData: true
 Imports: pbapply,
         lmerTest,
         gtools,
-        dplyr
+        dplyr,
+        lme4, 
+        magrittr
 URL: https//github.com/stop-pre16/lmerSeq
 RoxygenNote: 6.1.1

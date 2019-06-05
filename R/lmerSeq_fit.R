@@ -2,9 +2,9 @@
 #'
 #' Fits negative binomial generlized linear models and negative binomial generalized linear mixed models to RNA-Seq data using MCMC.
 #'
+#' @param form A one-sided linear formula describing both the fixed-effects and random-effects parts of the model using the syntax of the lme4 package
 #' @param expr_mat A (G x N) numeric matrix or data frame of transformed RNA-seq counts (e.g. using VST from DESeq2), with genes in rows and samples in columns. G = number of genes.  N = number of samples.
 #' @param gene_names An optional character vector of gene names (length G).  If unspecified, row names from the expression matrix will be used.
-#' @param form A one-sided linear formula describing both the fixed-effects and random-effects parts of the model using the syntax of the lme4 package
 #' @param sample_data Data frame with N rows containing the fixed effects terms included in the fixed_effects formula, as well as any random effects listed in random_intercept.  The rows of the data frame must correspond (and be in the same order as) the columns of the expression matrix.
 #' @param REML Should the models be fit with REML or regular ML?
 #' @export
@@ -33,12 +33,6 @@ lmerSeq.fit <- function(expr_mat=NULL, # matrix of transformed RNA-Seq counts wh
     stop("sample_data is missing.")}
 
   ### Inconsistent information ###
-
-  # fixed_terms <- attributes(terms(form))$term.labels[attributes(terms(form))$order==1]
-  #
-  # if(sum(fixed_terms %in% colnames(sample_data)) != length(fixed_terms)){
-  #   stop(paste0("The following fixed effects terms are missing from the sample_data:",
-  #               fixed_terms[!(fixed_terms %in% colnames(sample_data))]))}
 
   if((ncol(expr_mat)==nrow(sample_data))==F ) {
     stop("The expression matrix and sample data include differing numbers of samples.")}
