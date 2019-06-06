@@ -2,7 +2,7 @@
 % Please edit documentation in R/lmerSeq_contrast.R
 \name{lmerSeq.contrast}
 \alias{lmerSeq.contrast}
-\title{Function to Fit MCMSeq Models}
+\title{Function to summarize individual linear contrasts coefficients}
 \usage{
 lmerSeq.contrast(lmerSeq_results = NULL, contrast_mat = NULL,
   p_adj_method = "BH", ddf = "Satterthwaite", sort_results = T)
@@ -19,5 +19,5 @@ lmerSeq.contrast(lmerSeq_results = NULL, contrast_mat = NULL,
 \item{sort_results}{Should the results table be sorted by adjusted p-value?}
 }
 \description{
-Fits negative binomial generlized linear models and negative binomial generalized linear mixed models to RNA-Seq data using MCMC.
+Conducts t- or F-tests on linear contrasts of regression coefficients from fits done using lmerSeq_fit function.  If the contrast matrix has only 1 row, a t-test is done.  If the contrast matrix has more than 1 row, an F-test is done
 }

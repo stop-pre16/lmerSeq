@@ -2,7 +2,7 @@
 % Please edit documentation in R/lmerSeq_summary.R
 \name{lmerSeq.summary}
 \alias{lmerSeq.summary}
-\title{Function to Fit MCMSeq Models}
+\title{Function to summarize individual regression coefficients}
 \usage{
 lmerSeq.summary(lmerSeq_results = NULL, coefficient = NULL,
   p_adj_method = "BH", ddf = "Satterthwaite", sort_results = T)
@@ -19,5 +19,5 @@ lmerSeq.summary(lmerSeq_results = NULL, coefficient = NULL,
 \item{sort_results}{Should the results table be sorted by adjusted p-value?}
 }
 \description{
-Fits negative binomial generlized linear models and negative binomial generalized linear mixed models to RNA-Seq data using MCMC.
+Conducts t-tests on individual regression coefficients from fits done using lmerSeq_fit function
 }

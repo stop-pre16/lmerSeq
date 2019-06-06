@@ -1,20 +1,20 @@
-#' Function to Fit MCMSeq Models
+#' Function to Fit linear mixed models to transformed RNA-Seq data
 #'
-#' Fits negative binomial generlized linear models and negative binomial generalized linear mixed models to RNA-Seq data using MCMC.
+#' Fits  linear mixed models to RNA-Seq data using lme4.
 #'
 #' @param form A one-sided linear formula describing both the fixed-effects and random-effects parts of the model using the syntax of the lme4 package
 #' @param expr_mat A (G x N) numeric matrix or data frame of transformed RNA-seq counts (e.g. using VST from DESeq2), with genes in rows and samples in columns. G = number of genes.  N = number of samples.
 #' @param gene_names An optional character vector of gene names (length G).  If unspecified, row names from the expression matrix will be used.
-#' @param sample_data Data frame with N rows containing the fixed effects terms included in the fixed_effects formula, as well as any random effects listed in random_intercept.  The rows of the data frame must correspond (and be in the same order as) the columns of the expression matrix.
+#' @param sample_data Data frame with N rows containing the fixed- and random-effects terms included in the formula.  The rows of the data frame must correspond (and be in the same order as) the columns of the expression matrix.
 #' @param REML Should the models be fit with REML or regular ML?
 #' @export
 #'
 
-lmerSeq.fit <- function(expr_mat=NULL, # matrix of transformed RNA-Seq counts where rows are genes and columns are samples
-                       gene_names = NULL, # a vector of gene names (the length of the number of rows in the expression matrix).  If unspecified, rownames from the expression matrix will be used.
-                       form = NULL, #formula for fixed effects
-                       sample_data = NULL,
-                       REML = T
+lmerSeq.fit <- function(form = NULL, # Formula for fixed effects
+                        expr_mat = NULL, # Matrix of transformed RNA-Seq counts where rows are genes and columns are samples
+                        gene_names = NULL, # A vector of gene names (the length of the number of rows in the expression matrix).  If unspecified, rownames from the expression matrix will be used.
+                        sample_data = NULL, # A data frame with sample meta data
+                        REML = T # Fit mixed models using REML or ML
 ){
 
   ############################################################################################################
@@ -52,7 +52,6 @@ lmerSeq.fit <- function(expr_mat=NULL, # matrix of transformed RNA-Seq counts wh
     if(is.null(rownames(expr_mat))==T){rownames(expr_mat)<-seq(1,nrow(expr_mat),1)}
     gene_names = rownames(expr_mat)
   }
-
 
   ############################################################################################################
   # Begin Analysis

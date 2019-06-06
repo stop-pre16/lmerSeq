@@ -1,6 +1,6 @@
-#' Function to Fit MCMSeq Models
+#' Function to summarize individual linear contrasts coefficients
 #'
-#' Fits negative binomial generlized linear models and negative binomial generalized linear mixed models to RNA-Seq data using MCMC.
+#' Conducts t- or F-tests on linear contrasts of regression coefficients from fits done using lmerSeq_fit function.  If the contrast matrix has only 1 row, a t-test is done.  If the contrast matrix has more than 1 row, an F-test is done
 #'
 #' @param lmerSeq_results Results object from running lmerSeq.fit
 #' @param contrast_mat Numeric matrix representing the contrast to be tested.  Matrix must have the same number of columns as the number of coefficients in the model.  If the matrix has multiple rows, a simultaneous F-test will be done
@@ -12,9 +12,9 @@
 
 lmerSeq.contrast <- function(lmerSeq_results = NULL, # Results object from running lmerSeq.fit
                             contrast_mat = NULL, # Numeric matrix representing the contrast to be tested.  Matrix must have the same number of columns as the number of coefficients in the model.  If the matrix has multiple rows, a simultaneous F-test will be done
-                            p_adj_method = "BH", #Method for adjusting for multiple comparisons (default is Benjamini-Hochberg)
-                            ddf = "Satterthwaite", #Method for computing degrees of freedom and t-statistics. Options are "Satterthwaite" and "Kenward-Roger"
-                            sort_results = T #Should the results table be sorted by adjusted p-value?
+                            p_adj_method = "BH", # Method for adjusting for multiple comparisons (default is Benjamini-Hochberg)
+                            ddf = "Satterthwaite", # Method for computing degrees of freedom and t-statistics. Options are "Satterthwaite" and "Kenward-Roger"
+                            sort_results = T # Should the results table be sorted by adjusted p-value?
 ){
   gene_names <- do.call(c, lapply(lmerSeq_results, function(x){return(x$gene)}))
   coef_names <- names(fixef(lmerSeq_results[[1]]$fit))
