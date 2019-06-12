@@ -19,5 +19,5 @@ lmerSeq.fit(form = NULL, expr_mat = NULL, gene_names = NULL,
 \item{REML}{Should the models be fit with REML or regular ML?}
 }
 \description{
-Fits  linear mixed models to RNA-Seq data using lme4.
+Wrapper function that its linear mixed models to (transformed) RNA-Seq data using the utilities present in the lme4 package.
 }

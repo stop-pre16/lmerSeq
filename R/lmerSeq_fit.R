@@ -1,6 +1,6 @@
 #' Function to Fit linear mixed models to transformed RNA-Seq data
 #'
-#' Fits  linear mixed models to RNA-Seq data using lme4.
+#' Wrapper function that its linear mixed models to (transformed) RNA-Seq data using the utilities present in the lme4 package.
 #'
 #' @param form A one-sided linear formula describing both the fixed-effects and random-effects parts of the model using the syntax of the lme4 package
 #' @param expr_mat A (G x N) numeric matrix or data frame of transformed RNA-seq counts (e.g. using VST from DESeq2), with genes in rows and samples in columns. G = number of genes.  N = number of samples.
