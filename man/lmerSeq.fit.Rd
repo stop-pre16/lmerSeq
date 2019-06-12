@@ -21,3 +21,18 @@ lmerSeq.fit(form = NULL, expr_mat = NULL, gene_names = NULL,
 \description{
 Wrapper function that its linear mixed models to (transformed) RNA-Seq data using the utilities present in the lme4 package.
 }
+\examples{
+data("expr_data")
+vst_expr <- expr_example$vst_expr
+sample_meta_data <- expr_example$sample_meta_data
+
+##  Only including 10 genes in the expression matrix
+vst_expr <- vst_expr[1:10, ]
+
+##  Fit the Model
+fit.lmerSeq <- lmerSeq.fit(form = ~ group * time + (1|ids),
+                           expr_mat = vst_expr,
+                           sample_data = sample_meta_data,
+                           REML = T)
+
+}

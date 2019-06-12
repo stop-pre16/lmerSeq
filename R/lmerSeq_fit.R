@@ -7,6 +7,21 @@
 #' @param gene_names An optional character vector of gene names (length G).  If unspecified, row names from the expression matrix will be used.
 #' @param sample_data Data frame with N rows containing the fixed- and random-effects terms included in the formula.  The rows of the data frame must correspond (and be in the same order as) the columns of the expression matrix.
 #' @param REML Should the models be fit with REML or regular ML?
+#'
+#' @examples
+#' data("expr_data")
+#' vst_expr <- expr_example$vst_expr
+#' sample_meta_data <- expr_example$sample_meta_data
+#'
+#' ##  Only including 10 genes in the expression matrix
+#' vst_expr <- vst_expr[1:10, ]
+#'
+#' ##  Fit the Model
+#' fit.lmerSeq <- lmerSeq.fit(form = ~ group * time + (1|ids),
+#'                            expr_mat = vst_expr,
+#'                            sample_data = sample_meta_data,
+#'                            REML = T)
+#'
 #' @export
 #'
 

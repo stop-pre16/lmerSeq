@@ -21,3 +21,39 @@ lmerSeq.contrast(lmerSeq_results = NULL, contrast_mat = NULL,
 \description{
 Conducts t- or F-tests on linear contrasts of regression coefficients from fits done using lmerSeq_fit function.  If the contrast matrix has only 1 row, a t-test is done.  If the contrast matrix has more than 1 row, an F-test is done
 }
+\examples{
+data("expr_data")
+vst_expr <- expr_example$vst_expr
+sample_meta_data <- expr_example$sample_meta_data
+
+##Only including 10 genes in the expression matrix
+vst_expr <- vst_expr[1:10, ]
+
+##  Fit the Model
+fit_lmerSeq <- lmerSeq.fit(form = ~ group * time + (1|ids),
+                           expr_mat = vst_expr,
+                           sample_data = sample_meta_data,
+                           REML = T)
+
+
+##  1 dimensional contrast (t-test)
+cont_mat1 <- rbind(c(0, 1, 0, 1)) # group diff. at followup
+contrast_summary1 <- lmerSeq.contrast(lmerSeq_results = fit_lmerSeq,
+                                      contrast_mat = cont_mat1,
+                                      p_adj_method = 'BH',
+                                      ddf = 'Satterthwaite',
+                                      sort_results = T)
+print(contrast_summary1)
+
+##  multi-dimensional contrast (F-test)
+cont_mat2 <- rbind(c(0, 1, 0, 0),
+                   c(0, 0, 1, 0),
+                   c(0, 0, 0, 1)) # simultaneous test of all coefficients
+contrast_summary2 <- lmerSeq.contrast(lmerSeq_results = fit_lmerSeq,
+                                      contrast_mat = cont_mat2,
+                                      p_adj_method = 'BH',
+                                      ddf = 'Satterthwaite',
+                                      sort_results = T)
+print(contrast_summary2)
+
+}

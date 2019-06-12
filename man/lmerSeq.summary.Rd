@@ -21,3 +21,26 @@ lmerSeq.summary(lmerSeq_results = NULL, coefficient = NULL,
 \description{
 Conducts t-tests on individual regression coefficients from fits done using lmerSeq_fit function
 }
+\examples{
+data("expr_data")
+vst_expr <- expr_example$vst_expr
+sample_meta_data <- expr_example$sample_meta_data
+
+##  Only including 10 genes in the expression matrix
+vst_expr <- vst_expr[1:10, ]
+
+##  Fit the Model
+fit.lmerSeq <- lmerSeq.fit(form = ~ group * time + (1|ids),
+                           expr_mat = vst_expr,
+                           sample_data = sample_meta_data,
+                           REML = T)
+
+##  Summarize the time coefficient
+model_sum <- lmerSeq.summary(lmerSeq_results = fit.lmerSeq,
+                             coefficient = 3,
+                             p_adj_method = 'BH',
+                             ddf = 'Satterthwaite',
+                             sort_results = T)
+print(model_sum)
+
+}
