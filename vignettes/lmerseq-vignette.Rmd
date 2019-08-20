@@ -1,0 +1,19 @@
+---
+title: "lmerSeq: An R package for fitting linear mixed models to RNA-Seq data"
+author: "Brian Vestal and Elizabeth Wynn"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+As the cost of sequencing decreases, the complexity and size of RNA-Seq experiments are rapidly growing. In particular, paired, longitudinal and other correlated study designs are becoming commonplace.  However, the tools available to correctly analyze these more complex study designs have been limited.  In Vestal et al. 2019, we developed a Bayesian hierarchical negative binomial mixed model framework (called MCMSeq) that could directly handle count the data from RNA-Seq experiments with repeated measures.  Though MCMSeq performed best in terms of achieving good sensitivity while maintaining nominal type 1 error and false discovery rates (FDR) among the methods explored in that paper, the only other alternative that came close to matching its performance was to transform the counts, and then fit regular linear mixed models.  In this R package, entitled lmerSeq, we provide some convenient wrapper functions to fit these linear mixed models (using the lmerTest R package) and obtain results tables in a similar spirit to the edgeR or DESeq2 analysis pipelines.  In the following vignette, we provied an example analysis on simulated RNA-Seq data to show how to fit the models, summarize the results for a single coefficient, and then test a linear contrast of coefficients.      

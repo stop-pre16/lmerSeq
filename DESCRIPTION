@@ -16,3 +16,7 @@ Imports: pbapply,
         magrittr
 URL: https//github.com/stop-pre16/lmerSeq
 RoxygenNote: 6.1.1
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
