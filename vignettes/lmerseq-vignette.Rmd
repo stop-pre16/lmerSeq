@@ -16,4 +16,26 @@ knitr::opts_chunk$set(
 )
 ```
 
-As the cost of sequencing decreases, the complexity and size of RNA-Seq experiments are rapidly growing. In particular, paired, longitudinal and other correlated study designs are becoming commonplace.  However, the tools available to correctly analyze these more complex study designs have been limited.  In Vestal et al. 2019, we developed a Bayesian hierarchical negative binomial mixed model framework (called MCMSeq) that could directly handle count the data from RNA-Seq experiments with repeated measures.  Though MCMSeq performed best in terms of achieving good sensitivity while maintaining nominal type 1 error and false discovery rates (FDR) among the methods explored in that paper, the only other alternative that came close to matching its performance was to transform the counts, and then fit regular linear mixed models.  In this R package, entitled lmerSeq, we provide some convenient wrapper functions to fit these linear mixed models (using the lmerTest R package) and obtain results tables in a similar spirit to the edgeR or DESeq2 analysis pipelines.  In the following vignette, we provied an example analysis on simulated RNA-Seq data to show how to fit the models, summarize the results for a single coefficient, and then test a linear contrast of coefficients.      
+As the cost of sequencing decreases, the complexity and size of RNA-Seq experiments are rapidly growing. In particular, paired, longitudinal and other correlated study designs are becoming commonplace.  However, the tools available to correctly analyze these more complex study designs have been limited.  In Vestal et al. 2019, we developed a Bayesian hierarchical negative binomial mixed model framework (called MCMSeq) that could directly handle count the data from RNA-Seq experiments with repeated measures.  Though MCMSeq performed best in terms of achieving good sensitivity while maintaining nominal type 1 error and false discovery rates (FDR) among the methods explored in that paper, the only other alternative that came close to matching its performance was to transform the counts, and then fit regular linear mixed models.  In this R package, entitled lmerSeq, we provide some convenient wrapper functions to fit these linear mixed models (using the lmerTest R package) and obtain results tables in a similar spirit to the edgeR or DESeq2 analysis pipelines.  In the following vignette, we provied an example analysis on simulated RNA-Seq data to show how to fit the models, summarize the results for a single coefficient, and then test a linear contrast of coefficients.
+
+## Model Specification
+Similar to other commonly used RNA-Seq analysis tools, we model the observed RNA-Seq count data with a negative binomial distribution with a log link function.  To account for correlation, we allow a random intercept to be included in the model. Let $Y_{gij}$ be the expression of gene $g$ from subject $i$ at time point or observation $j$, then
+\begin{eqnarray}
+\label{eqn:glmm}
+Y_{gij} &\sim& \mathcal{NB}(\mu_{gij}, \alpha_g) \\
+\log(\mu_{gij}) &=& X_{ij}\boldsymbol{\beta_g} + b_{gi} + \rho_{ij}\\
+{b_{gi}} &\sim& \mathcal{N}(0, \sigma_g^2)
+\end{eqnarray}
+where $\mu_{gij}$ is the mean expression of gene $g$ in subject $i$ at observation $j$ and $\alpha_g$ is the dispersion parameter for gene $g$, which is related to the variance of $Y_{gij}$ by Var($Y_{gij}$) = $\mu_{gij} + \alpha_g \mu_{gij}^2$. $\boldsymbol{\beta_g}$ is a $p$ by 1 vector of fixed effect regression coefficients for gene $g$, $X_{ij}$ is a row vector of fixed effects covariates for subject $i$ at observation $j$, $b_{gi}$ is a random intercept for gene $g$ and subject $i$, and $\rho_{ij}$ is an offset for subject $i$ at observation $j$, which can be used to account for differences in sequencing depth between samples. We assume that for each gene, the subject-specific random intercept is normally distributed with mean 0 and variance $\sigma_g^2$.
+
+## Overview of Functions in the lmerSeq Package
+The three main functions in the lmerSeq package are lmerSeq.fit, which is used to fit lmerSeq models, lmerSeq_summary, which is used to summarize individual regression coefficients, and lmerSeq_contrast, which is used to summarize individual linear contrasts coefficients.  Each function has several required arguments and options which are described below.
+
+### mcmseq.fit
+#### _Required Arguments_
+
+| Argument       | Description | 
+| :-------------- | :---------------------------------------------------| 
+| form         | One-sided linear formula describing both the fixed-effects and random-effects parts of the model using the syntax of the lme4 package. |        
+| expr_mat  | (G x N) numeric matrix or data frame of transformed RNA-seq counts (e.g. using VST from DESeq2), with genes in rows and samples in columns. G = number of genes.  N = number of samples. | 
+| sample_data    | Data frame with N rows containing the fixed- and random-effects terms included in the formula.  The rows of the data frame must correspond (and be in the same order as) the columns of the expression matrix.
