@@ -1,7 +1,7 @@
 Package: lmerSeq
 Type: Package
 Title: Wrappers for Fitting Linear Mixed Models to RNA-Seq Data
-Version: 0.1.0
+Version: 0.1.1
 Author: Brian Vestal
 Maintainer: Brian Vestal <vestalb@njhealth.org>
 Description: A set of wrapper functions for fitting linear mixed models to (transformed) RNA-Seq data from experiments with repeated measeures or other clustering present among individuals 
@@ -13,7 +13,9 @@ Imports: pbapply,
         gtools,
         dplyr,
         lme4, 
-        magrittr
+        magrittr,
+        gtools,
+        parallel
 URL: https//github.com/stop-pre16/lmerSeq
 RoxygenNote: 6.1.1
 Suggests: 

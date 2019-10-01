@@ -14,6 +14,7 @@
 #' @importFrom dplyr mutate
 #' @importFrom dplyr arrange
 #' @importFrom gtools smartbind
+#' @importFrom parallel mclapply
 #'
 #'
 #' @docType package
