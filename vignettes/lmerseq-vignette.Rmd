@@ -108,7 +108,7 @@ sample_meta_data
 # The expression matrix (vst_expr) has the same number of columns as
 # rows in metadata.  The columns of the counts matrix
 # are in the same order as the rows of the metadata.
-vst_expr <- expr_example$vst_expr
+vst_expr <- expr_example$vst_expr[1:500,]
 head(vst_expr)
 ```
 The goal of our analysis will be to compare changes over time between the control and treatment groups.  We will fit the following model to the data:
@@ -133,8 +133,24 @@ To fit the model, we use the lmerSeq.fit function. The ```expr_mat``` argument t
 # Look at lmerSeq.fit object
 class(fit.lmerSeq)
 
-length(fit.lmerSeq)
+#Length is number of genes
+length(fit.lmerSeq) 
 
+# Names for individual element
 names(fit.lmerSeq[[1]])
 ```
 The resulting lmerSeq object is a list with elements for every gene in the expression matrix. Each gene element is a list containing two items. The first item, ```fit`` is an object of class ```lmerModLmerTest```  (see ```lmerTest``` package) which contains information concerning the model fit. The item ```gene``` contains the genename (or rowname from the expression matrix if gene names were not provided).
+
+### Summarizing Results
+Model coefficients can be more easily summarized with the lmSeq.summary function, which calculates and tabulates adjusted p-values, as well as other results. The coefficient of interst can be passed to the function either as a numeric indicator or character string. In calculating adjusted p-values, you can choose between various adjustment methods (see ```p.adjust.methods)``` and two degree of freedom methods (Satterthwaite or Kenward-Roger). The resultsing table can also be sorted by adjusted p-value by setting the ```sort_results``` option to ```TRUE```.
+```{r}
+ ##  Summarize the time coefficient
+ model_sum <- lmerSeq.summary(lmerSeq_results = fit.lmerSeq,
+                              coefficient = 3,
+                              p_adj_method = 'BH',
+                              ddf = 'Satterthwaite',
+                              sort_results = T)
+names(model_sum)
+head(model_sum$summary_table)
+```
+Along with information about the function call, the resulting summary object contains a list of genes with singular models, and a summary table. For each gene, the summary table displays the model estimate, standard error, degree of freedom, t-value, and raw and adjusted p-values. Genes with singular models are excluded from the summary table.
