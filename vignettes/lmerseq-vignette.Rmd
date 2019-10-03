@@ -120,3 +120,21 @@ Y_{gij} &\sim& \mathcal{N}(\mu_{gij}, \sigma_g^2) \\
 b_{gi} &\sim& \mathcal{N}(0, \sigma_{gb}^2) \nonumber
 \end{eqnarray}
  where $I_{T_i}$ is an indicator function that equals 1 if subject $i$ is in the treatment group, $I_{F_{ij}}$ is a similar indicator for if observation $j$ is the follow-up, and $b_{gi}$ is the random intercept for gene $g$ and subject $i$. 
+ 
+### Fitting the Model
+To fit the model, we use the lmerSeq.fit function. The ```expr_mat``` argument takes a data frame or matrix of transformed RNA-seq counts, the columns of which must be in the same order as the rows of ```sample_data``` data frame, which contains metadata on each sample.  Fixed and random effects are passed to the ```form``` argument using the syntax of the ```lme4``` package and must be included in the ```sample_data``` data frame   By default, the lmerSeq.fit will use rownames of the counts matrix to identify genes.  If you would like to use a different set of gene names, you can supply a character vector of names in the same order as the rows of the counts matrix to the gene_names option.  If you are using Mac or linux and would like to use use forking (via ```mclapply```) to parallelize fits, the ```parrallel``` argument should be set to ```TRUE``` and the number of cores to be used should be passed to the ```cores``` argument. Finally, if you would like to use regular maximum likelihood (ML) instead of restricted maximum likelihood (REML), set the ```REML``` argument to ```FALSE```.
+```{r}
+ ##  Fit the Model
+ fit.lmerSeq <- lmerSeq.fit(form = ~ group * time + (1|ids),
+                            expr_mat = vst_expr,
+                            sample_data = sample_meta_data,
+                            REML = T)
+
+# Look at lmerSeq.fit object
+class(fit.lmerSeq)
+
+length(fit.lmerSeq)
+
+names(fit.lmerSeq[[1]])
+```
+The resulting lmerSeq object is a list with elements for every gene in the expression matrix. Each gene element is a list containing two items. The first item, ```fit`` is an object of class ```lmerModLmerTest```  (see ```lmerTest``` package) which contains information concerning the model fit. The item ```gene``` contains the genename (or rowname from the expression matrix if gene names were not provided).
