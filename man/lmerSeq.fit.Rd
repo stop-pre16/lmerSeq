@@ -5,7 +5,7 @@
 \title{Function to Fit linear mixed models to transformed RNA-Seq data}
 \usage{
 lmerSeq.fit(form = NULL, expr_mat = NULL, gene_names = NULL,
-  sample_data = NULL, REML = T)
+  sample_data = NULL, REML = T, parallel = F, cores = 2)
 }
 \arguments{
 \item{form}{A one-sided linear formula describing both the fixed-effects and random-effects parts of the model using the syntax of the lme4 package}
@@ -17,6 +17,10 @@ lmerSeq.fit(form = NULL, expr_mat = NULL, gene_names = NULL,
 \item{sample_data}{Data frame with N rows containing the fixed- and random-effects terms included in the formula.  The rows of the data frame must correspond (and be in the same order as) the columns of the expression matrix.}
 
 \item{REML}{Should the models be fit with REML or regular ML?}
+
+\item{parallel}{If on Mac or linux, use forking (via mclapply) to parallelize fits}
+
+\item{cores}{Number of cores to use (default is 2)}
 }
 \description{
 Wrapper function that its linear mixed models to (transformed) RNA-Seq data using the utilities present in the lme4 package.
