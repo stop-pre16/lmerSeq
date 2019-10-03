@@ -16,26 +16,105 @@ knitr::opts_chunk$set(
 )
 ```
 
-As the cost of sequencing decreases, the complexity and size of RNA-Seq experiments are rapidly growing. In particular, paired, longitudinal and other correlated study designs are becoming commonplace.  However, the tools available to correctly analyze these more complex study designs have been limited.  In Vestal et al. 2019, we developed a Bayesian hierarchical negative binomial mixed model framework (called MCMSeq) that could directly handle count the data from RNA-Seq experiments with repeated measures.  Though MCMSeq performed best in terms of achieving good sensitivity while maintaining nominal type 1 error and false discovery rates (FDR) among the methods explored in that paper, the only other alternative that came close to matching its performance was to transform the counts, and then fit regular linear mixed models.  In this R package, entitled lmerSeq, we provide some convenient wrapper functions to fit these linear mixed models (using the lmerTest R package) and obtain results tables in a similar spirit to the edgeR or DESeq2 analysis pipelines.  In the following vignette, we provied an example analysis on simulated RNA-Seq data to show how to fit the models, summarize the results for a single coefficient, and then test a linear contrast of coefficients.
+As the cost of sequencing decreases, the complexity and size of RNA-Seq experiments are rapidly growing. In particular, paired, longitudinal and other correlated study designs are becoming commonplace.  However, the tools available to correctly analyze these more complex study designs have been limited.  In Vestal et al. 2019, we developed a Bayesian hierarchical negative binomial mixed model framework (called MCMSeq) that could directly handle count the data from RNA-Seq experiments with repeated measures.  Though MCMSeq performed best in terms of achieving good sensitivity while maintaining nominal type 1 error and false discovery rates (FDR) among the methods explored in that paper, the only other alternative that came close to matching its performance was to transform the counts, and then fit regular linear mixed models.  In this R package, entitled lmerSeq, we provide some convenient wrapper functions to fit these linear mixed models (using the lmerTest R package) and obtain results tables in a similar spirit to the ```edgeR``` or ```DESeq2``` analysis pipelines.  In the following vignette, we provied an example analysis on simulated RNA-Seq data to show how to fit the models, summarize the results for a single coefficient, and then test a linear contrast of coefficients.
 
 ## Model Specification
-Similar to other commonly used RNA-Seq analysis tools, we model the observed RNA-Seq count data with a negative binomial distribution with a log link function.  To account for correlation, we allow a random intercept to be included in the model. Let $Y_{gij}$ be the expression of gene $g$ from subject $i$ at time point or observation $j$, then
+To model the observed RNA-Seq count data, we first transform the counts using a normalizing transformation such as the variance stabilizing transformation offered in the ```vst``` function in ```DESeq2```. We model the transformed data using a linear mixed model.  To account for correlation, we allow a random intercept to be included in the model. Let $Y_{gij}$ be the transformed expression of gene $g$ from subject $i$ at time point or observation $j$, then
 \begin{eqnarray}
 \label{eqn:glmm}
-Y_{gij} &\sim& \mathcal{NB}(\mu_{gij}, \alpha_g) \\
-\log(\mu_{gij}) &=& X_{ij}\boldsymbol{\beta_g} + b_{gi} + \rho_{ij}\\
-{b_{gi}} &\sim& \mathcal{N}(0, \sigma_g^2)
+Y_{gij} &\sim& \mathcal{N}(\mu_{gij}, \sigma_g^2) \\
+\mu_{gij} &=& X_{ij}\boldsymbol{\beta_g} + b_{gi} \\
+{b_{gi}} &\sim& \mathcal{N}(0, \sigma_{gb}^2)
 \end{eqnarray}
-where $\mu_{gij}$ is the mean expression of gene $g$ in subject $i$ at observation $j$ and $\alpha_g$ is the dispersion parameter for gene $g$, which is related to the variance of $Y_{gij}$ by Var($Y_{gij}$) = $\mu_{gij} + \alpha_g \mu_{gij}^2$. $\boldsymbol{\beta_g}$ is a $p$ by 1 vector of fixed effect regression coefficients for gene $g$, $X_{ij}$ is a row vector of fixed effects covariates for subject $i$ at observation $j$, $b_{gi}$ is a random intercept for gene $g$ and subject $i$, and $\rho_{ij}$ is an offset for subject $i$ at observation $j$, which can be used to account for differences in sequencing depth between samples. We assume that for each gene, the subject-specific random intercept is normally distributed with mean 0 and variance $\sigma_g^2$.
+where $\mu_{gij}$ is the mean expression of gene $g$ in subject $i$ at observation $j$ and $\sigma_g^2$ is the variance parameter for gene $g$. $\boldsymbol{\beta_g}$ is a $p$ by 1 vector of fixed effect regression coefficients for gene $g$, $X_{ij}$ is a row vector of fixed effects covariates for subject $i$ at observation $j$, and $b_{gi}$ is a random intercept for gene $g$ and subject $i$. We assume that for each gene $g$, the subject-specific random intercept is normally distributed with mean 0 and variance $\sigma_{bg}^2$.
 
 ## Overview of Functions in the lmerSeq Package
 The three main functions in the lmerSeq package are lmerSeq.fit, which is used to fit lmerSeq models, lmerSeq_summary, which is used to summarize individual regression coefficients, and lmerSeq_contrast, which is used to summarize individual linear contrasts coefficients.  Each function has several required arguments and options which are described below.
 
-### mcmseq.fit
+### lmerSeq.fit
 #### _Required Arguments_
 
 | Argument       | Description | 
 | :-------------- | :---------------------------------------------------| 
 | form         | One-sided linear formula describing both the fixed-effects and random-effects parts of the model using the syntax of the lme4 package. |        
-| expr_mat  | (G x N) numeric matrix or data frame of transformed RNA-seq counts (e.g. using VST from DESeq2), with genes in rows and samples in columns. G = number of genes.  N = number of samples. | 
-| sample_data    | Data frame with N rows containing the fixed- and random-effects terms included in the formula.  The rows of the data frame must correspond (and be in the same order as) the columns of the expression matrix.
+| expr_mat  | (G x N) numeric matrix or data frame of transformed RNA-seq counts (e.g. using VST from ```DESeq2```), with genes in rows and samples in columns. G = number of genes.  N = number of samples. | 
+| sample_data    | Data frame with N rows containing the fixed- and random-effects terms included in the formula.  The rows of the data frame must correspond (and be in the same order as) the columns of the expression matrix.|
+
+
+#### _Aditional Arguments_
+
+| Option               | Description                                         | Default |
+| :---------------------- | :--------------------------------------------------- | :----------------|
+| gene_names         | An optional character vector of gene names (length G).  If unspecified, row names from the expression matrix will be used. | NULL | 
+| REML        | Should the models be fit with REML or regular ML?| TRUE |  
+
+### lmerSeq_summary
+#### _Required Arguments_
+
+| Argument       | Description | 
+| :-------------- | :---------------------------------------------------| 
+| lmerSeq_results         | Results object from running lmerSeq.fit. |        
+| coefficient  | Character string or numeric indicator of which coefficient to summarize.| 
+ 
+
+
+#### _Aditional Arguments_
+
+| Option               | Description                                         | Default |
+| :---------------------- | :--------------------------------------------------- | :----------------|
+| p_adj_method        | Method for adjusting for multiple comparisons (default is Benjamini-Hochberg). | "BH"| 
+| ddf        | Method for computing degrees of freedom and t-statistics. Options are "Satterthwaite" and "Kenward-Roger".| "Satterthwaite" |
+| sort_results        |Should the results table be sorted by adjusted p-value? | TRUE|
+
+### lmerSeq_contrast
+#### _Required Arguments_
+
+| Argument       | Description | 
+| :-------------- | :---------------------------------------------------| 
+| lmerSeq_results         | Results object from running lmerSeq.fit. |        
+| contrast_mat  | Numeric matrix representing the contrast to be tested.  Matrix must have the same number of columns as the number of coefficients in the model.  If the matrix has multiple rows, a simultaneous F-test will be done. | 
+
+
+
+#### _Aditional Arguments_
+
+| Option               | Description                                         | Default |
+| :---------------------- | :--------------------------------------------------- | :----------------|
+| p_adj_method        | Method for adjusting for multiple comparisons (default is Benjamini-Hochberg). | "BH"| 
+| ddf        | Method for computing degrees of freedom and t-statistics. Options are "Satterthwaite" and "Kenward-Roger".| "Satterthwaite" |
+| sort_results        |Should the results table be sorted by adjusted p-value? | TRUE|
+
+
+## An Example lmerSeq Analysis
+We will perform an analysis using data simulated from a negative binomial distribution and than transformed using the ```VST``` function in the ```DESeq2``` package. This dataset is included in the package and transformed expression data on 10 subjects (ids 1 to 10): 5 control subjects (group = 0) and 5 treatment subjects (group = 1). All subjects are measured at 2 timepoints, baseline (time = 0) and follow-up (time = 1).  The dataset contains 14,916 genes, *How many genes differentially expressed?* First load the data:
+
+```{r}
+# Load the library
+library(lmerSeq)
+
+# Load the data
+data("expr_example")
+
+names(expr_example)
+
+# sample_meta_data has information about the the study design
+# each row is a sample and corresponds to a column
+# in the expression matrix (vst_expr)
+metadata <- expr_example$sample_meta_data
+metadata
+
+# The expression matrix (vst_expr) has the same number of columns as
+# rows in metadata.  The columns of the counts matrix
+# are in the same order as the rows of the metadata.
+expr <- expr_example$vst_expr
+head(expr)
+```
+The goal of our analysis will be to compare changes over time between the control and treatment groups.  We will fit the following model to the data:
+
+\begin{eqnarray}
+ \label{eq:sim_data}
+Y_{gij} &\sim& \mathcal{N}(\mu_{gij}, \sigma_g^2) \\
+\mu_{gij} &=& \beta_{g0} + \beta_{g1} I_{T_i} + \beta_{g2} I_{F_{ij}} + \beta_{g3}I_{T_i} I_{F_{ij}} + b_{gi}  \nonumber \\
+b_{gi} &\sim& \mathcal{N}(0, \sigma_{gb}^2) \nonumber
+\end{eqnarray}
+ where $I_{T_i}$ is an indicator function that equals 1 if subject $i$ is in the treatment group, $I_{F_{ij}}$ is a similar indicator for if observation $j$ is the follow-up, and $b_{gi}$ is the random intercept for gene $g$ and subject $i$. 
