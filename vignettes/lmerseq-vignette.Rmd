@@ -46,7 +46,9 @@ The three main functions in the lmerSeq package are lmerSeq.fit, which is used t
 | Option               | Description                                         | Default |
 | :---------------------- | :--------------------------------------------------- | :----------------|
 | gene_names         | An optional character vector of gene names (length G).  If unspecified, row names from the expression matrix will be used. | NULL | 
-| REML        | Should the models be fit with REML or regular ML?| TRUE |  
+| REML        | Should the models be fit with REML or regular ML?| TRUE |
+| parallel        |If on Mac or linux, use forking (via mclapply) to parallelize fits.| FALSE |
+| cores        | Number of cores to use if using parallelizing fits. | 2 |
 
 ### lmerSeq_summary
 #### _Required Arguments_
@@ -100,14 +102,14 @@ names(expr_example)
 # sample_meta_data has information about the the study design
 # each row is a sample and corresponds to a column
 # in the expression matrix (vst_expr)
-metadata <- expr_example$sample_meta_data
-metadata
+sample_meta_data <- expr_example$sample_meta_data
+sample_meta_data
 
 # The expression matrix (vst_expr) has the same number of columns as
 # rows in metadata.  The columns of the counts matrix
 # are in the same order as the rows of the metadata.
-expr <- expr_example$vst_expr
-head(expr)
+vst_expr <- expr_example$vst_expr
+head(vst_expr)
 ```
 The goal of our analysis will be to compare changes over time between the control and treatment groups.  We will fit the following model to the data:
 
