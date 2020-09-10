@@ -72,7 +72,15 @@ lmerSeq.contrast <- function(lmerSeq_results = NULL, # Results object from runni
 
   joint_flag <- nrow(contrast_mat) > 1
 
-  idx_singular <- do.call(c, lapply(lmerSeq_results, function(x){isSingular(x$fit)}))
+  # idx_singular <- do.call(c, lapply(lmerSeq_results, function(x){isSingular(x$fit)}))
+  idx_singular <- do.call(c, lapply(lmerSeq_results, function(x){
+    if(is.na(x$fit)){
+      return(T)
+    }
+    else{
+      return(lme4::isSingular(x$fit))
+    }
+  }))
   genes_singular_fits <- gene_names[idx_singular]
   ret <- do.call(rbind, lapply(lmerSeq_results[!idx_singular], function(x){
     # x = lmerSeq_results[[1]]

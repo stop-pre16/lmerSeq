@@ -65,7 +65,15 @@ lmerSeq.summary <- function(lmerSeq_results = NULL, # Results object from runnin
     stop("Invalid ddf method")
   }
 
-  idx_singular <- do.call(c, lapply(lmerSeq_results, function(x){lme4::isSingular(x$fit)}))
+  # idx_singular <- do.call(c, lapply(lmerSeq_results, function(x){lme4::isSingular(x$fit)}))
+  idx_singular <- do.call(c, lapply(lmerSeq_results, function(x){
+    if(is.na(x$fit)){
+      return(T)
+    }
+    else{
+      return(lme4::isSingular(x$fit))
+    }
+  }))
   genes_singular_fits <- gene_names[idx_singular]
   ret <- do.call(rbind, lapply(lmerSeq_results[!idx_singular], function(x){
     # x = lmerSeq_results$fitted_models[[1]]
