@@ -82,7 +82,7 @@ lmerSeq.contrast <- function(lmerSeq_results = NULL, # Results object from runni
     }
   }))
   genes_singular_fits <- gene_names[idx_singular]
-  ret <- do.call(rbind, lapply(lmerSeq_results[!idx_singular], function(x){
+  ret <- do.call(rbind, pblapply(lmerSeq_results[!idx_singular], function(x){
     # x = lmerSeq_results[[1]]
     cont_sub <- lmerTest::contest(x$fit, L = contrast_mat, joint = joint_flag, ddf = ddf)
     return(cont_sub)

@@ -107,6 +107,6 @@ lmerSeq.fit <- function(form = NULL, # Formula for fixed effects
       ret2 <- list(fit = ret_sub, gene = gene_names[i])
     })
   }
-
+  names(ret) = gene_names
   return(ret)
 }

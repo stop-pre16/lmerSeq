@@ -75,7 +75,7 @@ lmerSeq.summary <- function(lmerSeq_results = NULL, # Results object from runnin
     }
   }))
   genes_singular_fits <- gene_names[idx_singular]
-  ret <- do.call(rbind, lapply(lmerSeq_results[!idx_singular], function(x){
+  ret <- do.call(rbind, pblapply(lmerSeq_results[!idx_singular], function(x){
     # x = lmerSeq_results$fitted_models[[1]]
     res_sub <- summary(x$fit, ddf = ddf)$coefficients[coefficient, ]
     return(res_sub)
