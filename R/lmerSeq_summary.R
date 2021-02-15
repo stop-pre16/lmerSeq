@@ -39,7 +39,15 @@ lmerSeq.summary <- function(lmerSeq_results = NULL, # Results object from runnin
                         ddf = "Satterthwaite", # Method for computing degrees of freedom and t-statistics. Options are "Satterthwaite" and "Kenward-Roger"
                         sort_results = T # Should the results table be sorted by adjusted p-value?
 ){
-  coef_names <- names(lme4::fixef(lmerSeq_results[[1]]$fit))
+  n_fits = length(lmerSeq_results)
+  idx_tmp = 1
+  while(is.null(lmerSeq_results[[i]]$fit) & i <= n_fits){
+    idx_tmp = idx_tmp + 1
+  }
+  if(idx_tmp > n_fits){
+    stop("Model fits for all genes are null")
+  }
+  coef_names <- names(lme4::fixef(lmerSeq_results[[idx_tmp]]$fit))
   gene_names <- do.call(c, lapply(lmerSeq_results, function(x){return(x$gene)}))
   ############################################################################################################
   #Error Messages for insufficient or inconsistent information
@@ -67,7 +75,7 @@ lmerSeq.summary <- function(lmerSeq_results = NULL, # Results object from runnin
 
   # idx_singular <- do.call(c, lapply(lmerSeq_results, function(x){lme4::isSingular(x$fit)}))
   idx_singular <- do.call(c, lapply(lmerSeq_results, function(x){
-    if(is.na(x$fit)){
+    if(is.null(x$fit)){
       return(T)
     }
     else{

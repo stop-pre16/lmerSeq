@@ -31,6 +31,7 @@ lmerSeq.fit <- function(form = NULL, # Formula for fixed effects
                         expr_mat = NULL, # Matrix of transformed RNA-Seq counts where rows are genes and columns are samples
                         gene_names = NULL, # A vector of gene names (the length of the number of rows in the expression matrix).  If unspecified, rownames from the expression matrix will be used.
                         sample_data = NULL, # A data frame with sample meta data
+                        weights = NULL, # Matrix of same dimension as expr_mat with gene-specific weights for each sample
                         REML = T, # Fit mixed models using REML or ML
                         parallel = F,
                         cores = 2
@@ -86,9 +87,12 @@ lmerSeq.fit <- function(form = NULL, # Formula for fixed effects
                              FUN = function(i){
       dat_sub <- cbind(sample_data, data.frame(expr = as.numeric(expr_mat[i, ])))
       ret_sub <- tryCatch({
-        tmp1 <- suppressMessages(lmerTest::lmer(formula = form_sub, data = dat_sub, REML = REML))
+        tmp1 <- suppressMessages(lmerTest::lmer(formula = form_sub,
+                                                data = dat_sub,
+                                                REML = REML,
+                                                weights = weights[i, ]))
       }, error = function(e) {
-        ret_sub2 <- NA
+        ret_sub2 <- NULL
       })
       ret2 <- list(fit = ret_sub, gene = gene_names[i])
     })
@@ -100,9 +104,12 @@ lmerSeq.fit <- function(form = NULL, # Formula for fixed effects
                               FUN = function(i){
       dat_sub <- cbind(sample_data, data.frame(expr = as.numeric(expr_mat[i, ])))
       ret_sub <- tryCatch({
-        tmp1 <- suppressMessages(lmerTest::lmer(formula = form_sub, data = dat_sub, REML = REML))
+        tmp1 <- suppressMessages(lmerTest::lmer(formula = form_sub,
+                                                data = dat_sub,
+                                                REML = REML,
+                                                weights = weights[i, ]))
       }, error = function(e) {
-        ret_sub2 <- NA
+        ret_sub2 <- NULL
       })
       ret2 <- list(fit = ret_sub, gene = gene_names[i])
     })
