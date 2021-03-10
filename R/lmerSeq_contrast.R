@@ -52,8 +52,16 @@ lmerSeq.contrast <- function(lmerSeq_results = NULL, # Results object from runni
                             ddf = "Satterthwaite", # Method for computing degrees of freedom and t-statistics. Options are "Satterthwaite" and "Kenward-Roger"
                             sort_results = T # Should the results table be sorted by adjusted p-value?
 ){
+  n_fits = length(lmerSeq_results)
+  idx_tmp = 1
+  while(is.null(lmerSeq_results[[idx_tmp]]$fit) & idx_tmp <= n_fits){
+    idx_tmp = idx_tmp + 1
+  }
+  if(idx_tmp > n_fits){
+    stop("Model fits for all genes are null")
+  }
+  coef_names <- names(lme4::fixef(lmerSeq_results[[idx_tmp]]$fit))
   gene_names <- do.call(c, lapply(lmerSeq_results, function(x){return(x$gene)}))
-  coef_names <- names(fixef(lmerSeq_results[[1]]$fit))
   colnames(contrast_mat) <- coef_names
   ############################################################################################################
   #Error Messages for insufficient or inconsistent information

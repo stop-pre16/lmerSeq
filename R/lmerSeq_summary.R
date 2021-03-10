@@ -41,7 +41,7 @@ lmerSeq.summary <- function(lmerSeq_results = NULL, # Results object from runnin
 ){
   n_fits = length(lmerSeq_results)
   idx_tmp = 1
-  while(is.null(lmerSeq_results[[i]]$fit) & i <= n_fits){
+  while(is.null(lmerSeq_results[[idx_tmp]]$fit) & idx_tmp <= n_fits){
     idx_tmp = idx_tmp + 1
   }
   if(idx_tmp > n_fits){

@@ -82,37 +82,79 @@ lmerSeq.fit <- function(form = NULL, # Formula for fixed effects
   # Ensure that contrast, gene and fixed effect names are supplied as characters
   gene_names <- as.character(gene_names)
   form_sub <- update(form, expr ~ .)
+  n_samples = ncol(expr_mat)
   if(parallel == F){
-    ret <- pbapply::pblapply(X = 1:nrow(expr_mat),
-                             FUN = function(i){
-      dat_sub <- cbind(sample_data, data.frame(expr = as.numeric(expr_mat[i, ])))
-      ret_sub <- tryCatch({
-        tmp1 <- suppressMessages(lmerTest::lmer(formula = form_sub,
-                                                data = dat_sub,
-                                                REML = REML,
-                                                weights = weights[i, ]))
-      }, error = function(e) {
-        ret_sub2 <- NULL
-      })
-      ret2 <- list(fit = ret_sub, gene = gene_names[i])
-    })
+    if(is.null(weights)){
+      ret <- pbapply::pblapply(X = 1:nrow(expr_mat),
+                               FUN = function(i){
+
+                                 dat_sub <- cbind(sample_data, data.frame(expr = as.numeric(expr_mat[i, ])))
+                                 ret_sub <- tryCatch({
+                                   tmp1 <- suppressMessages(lmerTest::lmer(formula = form_sub,
+                                                                           data = dat_sub,
+                                                                           REML = REML))
+                                 }, error = function(e) {
+                                   ret_sub2 <- NULL
+                                 })
+
+                                 ret2 <- list(fit = ret_sub, gene = gene_names[i])
+                               })
+    }
+    else{
+      ret <- pbapply::pblapply(X = 1:nrow(expr_mat),
+                               FUN = function(i){
+                                 dat_sub <- cbind(sample_data, data.frame(expr = as.numeric(expr_mat[i, ]),
+                                                                          weights_sub = weights[i, ]))
+                                 ret_sub <- tryCatch({
+                                   tmp1 <- suppressMessages(lmerTest::lmer(formula = form_sub,
+                                                                           data = dat_sub,
+                                                                           REML = REML,
+                                                                           weights = weights_sub))
+                                 }, error = function(e) {
+                                   ret_sub2 <- NULL
+                                 })
+                                 ret2 <- list(fit = ret_sub, gene = gene_names[i])
+
+                               })
+    }
   }
   else{
-    ret <- parallel::mclapply(X = 1:nrow(expr_mat),
-                              mc.silent = T,
-                              mc.cores = cores,
-                              FUN = function(i){
-      dat_sub <- cbind(sample_data, data.frame(expr = as.numeric(expr_mat[i, ])))
-      ret_sub <- tryCatch({
-        tmp1 <- suppressMessages(lmerTest::lmer(formula = form_sub,
-                                                data = dat_sub,
-                                                REML = REML,
-                                                weights = weights[i, ]))
-      }, error = function(e) {
-        ret_sub2 <- NULL
-      })
-      ret2 <- list(fit = ret_sub, gene = gene_names[i])
-    })
+    if(is.null(weights)){
+      ret <- parallel::mclapply(X = 1:nrow(expr_mat),
+                                mc.silent = T,
+                                mc.cores = cores,
+                                FUN = function(i){
+
+                                  dat_sub <- cbind(sample_data, data.frame(expr = as.numeric(expr_mat[i, ])))
+                                  ret_sub <- tryCatch({
+                                    tmp1 <- suppressMessages(lmerTest::lmer(formula = form_sub,
+                                                                            data = dat_sub,
+                                                                            REML = REML))
+                                  }, error = function(e) {
+                                    ret_sub2 <- NULL
+                                  })
+
+                                  ret2 <- list(fit = ret_sub, gene = gene_names[i])
+                                })
+    }
+    else{
+      ret <- parallel::mclapply(X = 1:nrow(expr_mat),
+                                mc.silent = T,
+                                mc.cores = cores,
+                                FUN = function(i){
+                                  dat_sub <- cbind(sample_data, data.frame(expr = as.numeric(expr_mat[i, ]),
+                                                                           weights_sub = weights[i, ]))
+                                  ret_sub <- tryCatch({
+                                    tmp1 <- suppressMessages(lmerTest::lmer(formula = form_sub,
+                                                                            data = dat_sub,
+                                                                            REML = REML,
+                                                                            weights = weights_sub))
+                                  }, error = function(e) {
+                                    ret_sub2 <- NULL
+                                  })
+                                  ret2 <- list(fit = ret_sub, gene = gene_names[i])
+                                })
+    }
   }
   names(ret) = gene_names
   return(ret)
