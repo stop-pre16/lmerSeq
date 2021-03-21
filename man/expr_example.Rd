@@ -4,12 +4,14 @@
 \name{expr_example}
 \alias{expr_example}
 \title{Example transformed RNA-Seq data from paired observations}
-\format{A list with 2 named objects:
+\format{
+A list with 2 named objects:
 \describe{
   \item{vst_expr}{VST transformed expression}
   \item{sample_meta_data}{data frame with variables for group, time, and subject ID.  Rows are in the same order as columns of vst_expr}
   ...
-}}
+}
+}
 \usage{
 expr_example
 }

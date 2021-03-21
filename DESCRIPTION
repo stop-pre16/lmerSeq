@@ -17,7 +17,7 @@ Imports: pbapply,
         gtools,
         parallel
 URL: https//github.com/stop-pre16/lmerSeq
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0
 Suggests: 
     knitr,
     rmarkdown

@@ -1,3 +1,4 @@
+
 #' Function to Fit linear mixed models to transformed RNA-Seq data
 #'
 #' Wrapper function that its linear mixed models to (transformed) RNA-Seq data using the utilities present in the lme4 package.
@@ -26,7 +27,6 @@
 #'
 #' @export
 #'
-
 lmerSeq.fit <- function(form = NULL, # Formula for fixed effects
                         expr_mat = NULL, # Matrix of transformed RNA-Seq counts where rows are genes and columns are samples
                         gene_names = NULL, # A vector of gene names (the length of the number of rows in the expression matrix).  If unspecified, rownames from the expression matrix will be used.
@@ -119,65 +119,38 @@ lmerSeq.fit <- function(form = NULL, # Formula for fixed effects
     }
   }
   else{
-    breaks_par = c(1, round(quantile(1:nrow(expr_mat), probs = (1:(cores - 1) / cores))), nrow(expr_mat))
-    par_labs = cut(1:nrow(expr_mat), breaks = breaks_par, include.lowest = T, labels = F)
     if(is.null(weights)){
-      df_par = lapply(unique(par_labs), function(lab_sub){
-        # lab_sub = par_labs[1]
-        expr_sub = expr_mat[par_labs == lab_sub, ]
-        gene_nams_sub = gene_names[par_labs == lab_sub]
-        ret = list(expr_sub = expr_sub,
-                   gene_nams_sub = gene_nams_sub)
+      ret = parallel::mclapply(1:nrow(expr_mat), mc.silent = T, mc.cores = cores, function(i){
+
+        dat_sub <- cbind(sample_data, data.frame(expr = as.numeric(expr_mat[i, ])))
+        ret_sub <- tryCatch({
+          tmp1 <- suppressMessages(lmerTest::lmer(formula = form_sub,
+                                                  data = dat_sub,
+                                                  REML = REML))
+        }, error = function(e) {
+          ret_sub2 <- NULL
+        })
+
+        ret2 <- list(fit = ret_sub, gene = gene_names[i])
       })
-      ret <- do.call(c, parallel::mclapply(df_par, mc.silent = T, mc.cores = cores, function(df_sub){
-        # df_sub = df_par[[1]]
-        ng_sub = nrow(df_sub$expr_sub)
-        ret_list = vector(mode = 'list', length = ng_sub)
-        for(i in 1:ng_sub){
-          dat_sub <- cbind(sample_data, data.frame(expr = as.numeric(df_sub$expr_sub[i, ])))
-          ret_sub <- tryCatch({
-            tmp1 <- suppressMessages(lmerTest::lmer(formula = form_sub,
-                                                    data = dat_sub,
-                                                    REML = REML))
-          }, error = function(e) {
-            ret_sub2 <- NULL
-          })
-          ret2 <- list(fit = ret_sub, gene = df_sub$gene_nams_sub[i])
-          ret_list[[i]] = ret2
-        }
-        return(ret_list)
-      }))
     }
     else{
-      df_par = lapply(unique(par_labs), function(lab_sub){
-        # lab_sub = par_labs[1]
-        expr_sub = expr_mat[par_labs == lab_sub, ]
-        gene_nams_sub = gene_names[par_labs == lab_sub]
-        weights_sub = weights[par_labs == lab_sub, ]
-        ret = list(expr_sub = expr_sub,
-                   gene_nams_sub = gene_nams_sub,
-                   weights_sub = weights_sub)
+      df_combined = cbind(expr_mat, weights)
+      ret = parallel::mclapply(1:nrow(expr_mat), mc.silent = T, mc.cores = cores, function(i){
+        dat_sub <- cbind(sample_data,
+                         data.frame(expr = as.numeric(df_combined[i, 1:n_samples]),
+                                    weights_sub = as.numeric(df_combined[i, (n_samples+1):(2*n_samples)])))
+        ret_sub <- tryCatch({
+          tmp1 <- suppressMessages(lmerTest::lmer(formula = form_sub,
+                                                  data = dat_sub,
+                                                  REML = REML,
+                                                  weights = weights_sub))
+        }, error = function(e) {
+          ret_sub2 <- NULL
+        })
+        ret2 <- list(fit = ret_sub, gene = gene_names[i])
+
       })
-      ret <- do.call(c, parallel::mclapply(df_par, mc.silent = T, mc.cores = cores, function(df_sub){
-        # df_sub = df_par[[1]]
-        ng_sub = nrow(df_sub$expr_sub)
-        ret_list = vector(mode = 'list', length = ng_sub)
-        for(i in 1:ng_sub){
-          dat_sub <- cbind(sample_data, data.frame(expr = as.numeric(df_sub$expr_sub[i, ]),
-                                                   weights_sub = df_sub$weights_sub[i, ]))
-          ret_sub <- tryCatch({
-            tmp1 <- suppressMessages(lmerTest::lmer(formula = form_sub,
-                                                    data = dat_sub,
-                                                    REML = REML,
-                                                    weights = weights_sub))
-          }, error = function(e) {
-            ret_sub2 <- NULL
-          })
-          ret2 <- list(fit = ret_sub, gene = df_sub$gene_nams_sub[i])
-          ret_list[[i]] = ret2
-        }
-        return(ret_list)
-      }))
     }
   }
   # names(ret) = gene_names

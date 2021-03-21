@@ -4,8 +4,13 @@
 \alias{lmerSeq.contrast}
 \title{Function to summarize individual linear contrasts coefficients}
 \usage{
-lmerSeq.contrast(lmerSeq_results = NULL, contrast_mat = NULL,
-  p_adj_method = "BH", ddf = "Satterthwaite", sort_results = T)
+lmerSeq.contrast(
+  lmerSeq_results = NULL,
+  contrast_mat = NULL,
+  p_adj_method = "BH",
+  ddf = "Satterthwaite",
+  sort_results = T
+)
 }
 \arguments{
 \item{lmerSeq_results}{Results object from running lmerSeq.fit}

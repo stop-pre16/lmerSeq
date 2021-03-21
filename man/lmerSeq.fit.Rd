@@ -4,8 +4,16 @@
 \alias{lmerSeq.fit}
 \title{Function to Fit linear mixed models to transformed RNA-Seq data}
 \usage{
-lmerSeq.fit(form = NULL, expr_mat = NULL, gene_names = NULL,
-  sample_data = NULL, REML = T, parallel = F, cores = 2)
+lmerSeq.fit(
+  form = NULL,
+  expr_mat = NULL,
+  gene_names = NULL,
+  sample_data = NULL,
+  weights = NULL,
+  REML = T,
+  parallel = F,
+  cores = 2
+)
 }
 \arguments{
 \item{form}{A one-sided linear formula describing both the fixed-effects and random-effects parts of the model using the syntax of the lme4 package}

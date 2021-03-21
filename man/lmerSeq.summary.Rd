@@ -4,8 +4,13 @@
 \alias{lmerSeq.summary}
 \title{Function to summarize individual regression coefficients}
 \usage{
-lmerSeq.summary(lmerSeq_results = NULL, coefficient = NULL,
-  p_adj_method = "BH", ddf = "Satterthwaite", sort_results = T)
+lmerSeq.summary(
+  lmerSeq_results = NULL,
+  coefficient = NULL,
+  p_adj_method = "BH",
+  ddf = "Satterthwaite",
+  sort_results = T
+)
 }
 \arguments{
 \item{lmerSeq_results}{Results object from running lmerSeq.fit}
