@@ -37,7 +37,8 @@ lmerSeq.summary <- function(lmerSeq_results = NULL, # Results object from runnin
                         coefficient = NULL, # Character string or numeric indicator of which coefficient to summarize
                         p_adj_method = "BH", # Method for adjusting for multiple comparisons (default is Benjamini-Hochberg)
                         ddf = "Satterthwaite", # Method for computing degrees of freedom and t-statistics. Options are "Satterthwaite" and "Kenward-Roger"
-                        sort_results = T # Should the results table be sorted by adjusted p-value?
+                        sort_results = T, # Should the results table be sorted by adjusted p-value?
+                        include_singular = F # Should genes with singular fits be included in the results?
 ){
   n_fits = length(lmerSeq_results)
   idx_tmp = 1
@@ -74,6 +75,7 @@ lmerSeq.summary <- function(lmerSeq_results = NULL, # Results object from runnin
   }
 
   # idx_singular <- do.call(c, lapply(lmerSeq_results, function(x){lme4::isSingular(x$fit)}))
+
   idx_singular <- do.call(c, lapply(lmerSeq_results, function(x){
     if(is.null(x$fit)){
       return(T)
@@ -83,19 +85,27 @@ lmerSeq.summary <- function(lmerSeq_results = NULL, # Results object from runnin
     }
   }))
   genes_singular_fits <- gene_names[idx_singular]
-  ret <- do.call(rbind, pblapply(lmerSeq_results[!idx_singular], function(x){
+
+  ret <- do.call(rbind, pblapply(lmerSeq_results, function(x){
     # x = lmerSeq_results$fitted_models[[1]]
+    if(is.null(x)){
+      return(NA)
+    }
     res_sub <- summary(x$fit, ddf = ddf)$coefficients[coefficient, ]
     return(res_sub)
   }))
-  ret <- data.frame(gene = gene_names[!idx_singular], ret)
+  if(include_singular == F){
+    ret[idx_singular, ] = NA
+  }
+  ret <- data.frame(gene = gene_names, ret)
+
   names(ret)[6] <- 'p_val_raw'
   ret <- ret %>% mutate(p_val_adj = p.adjust(p_val_raw, method = p_adj_method))
   if(sort_results){
     ret <- ret %>%
       arrange(p_val_adj)
   }
-  ret <- gtools::smartbind(ret, data.frame(gene = genes_singular_fits))
+  # ret <- gtools::smartbind(ret, data.frame(gene = genes_singular_fits))
   rownames(ret) <- NULL
   ret2 <- list(coefficient = coef_out,
                summary_table = ret,

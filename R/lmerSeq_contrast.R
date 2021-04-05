@@ -50,7 +50,8 @@ lmerSeq.contrast <- function(lmerSeq_results = NULL, # Results object from runni
                             contrast_mat = NULL, # Numeric matrix representing the contrast to be tested.  Matrix must have the same number of columns as the number of coefficients in the model.  If the matrix has multiple rows, a simultaneous F-test will be done
                             p_adj_method = "BH", # Method for adjusting for multiple comparisons (default is Benjamini-Hochberg)
                             ddf = "Satterthwaite", # Method for computing degrees of freedom and t-statistics. Options are "Satterthwaite" and "Kenward-Roger"
-                            sort_results = T # Should the results table be sorted by adjusted p-value?
+                            sort_results = T, # Should the results table be sorted by adjusted p-value?
+                            include_singular = F # Should genes with singular fits be included in the results?
 ){
   n_fits = length(lmerSeq_results)
   idx_tmp = 1
@@ -82,7 +83,7 @@ lmerSeq.contrast <- function(lmerSeq_results = NULL, # Results object from runni
 
   # idx_singular <- do.call(c, lapply(lmerSeq_results, function(x){isSingular(x$fit)}))
   idx_singular <- do.call(c, lapply(lmerSeq_results, function(x){
-    if(is.na(x$fit)){
+    if(is.null(x$fit)){
       return(T)
     }
     else{
@@ -90,12 +91,18 @@ lmerSeq.contrast <- function(lmerSeq_results = NULL, # Results object from runni
     }
   }))
   genes_singular_fits <- gene_names[idx_singular]
-  ret <- do.call(rbind, pblapply(lmerSeq_results[!idx_singular], function(x){
+  ret <- do.call(rbind, pblapply(lmerSeq_results, function(x){
     # x = lmerSeq_results[[1]]
+    if(is.null(x)){
+      return(NA)
+    }
     cont_sub <- lmerTest::contest(x$fit, L = contrast_mat, joint = joint_flag, ddf = ddf)
     return(cont_sub)
   }))
-  ret <- data.frame(gene = gene_names[!idx_singular], ret)
+  if(include_singular == F){
+    ret[idx_singular, ] = NA
+  }
+  ret <- data.frame(gene = gene_names, ret)
   if(joint_flag){
     names(ret)[7] <- 'p_val_raw'
   }
@@ -107,7 +114,7 @@ lmerSeq.contrast <- function(lmerSeq_results = NULL, # Results object from runni
     ret <- ret %>%
       arrange(p_val_adj)
   }
-  ret <- gtools::smartbind(ret, data.frame(gene = genes_singular_fits))
+  # ret <- gtools::smartbind(ret, data.frame(gene = genes_singular_fits))
   rownames(ret) <- NULL
   ret2 <- list(contrast_mat = contrast_mat,
                summary_table = ret,
