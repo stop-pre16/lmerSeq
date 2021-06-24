@@ -9,7 +9,8 @@ lmerSeq.contrast(
   contrast_mat = NULL,
   p_adj_method = "BH",
   ddf = "Satterthwaite",
-  sort_results = T
+  sort_results = T,
+  include_singular = F
 )
 }
 \arguments{
