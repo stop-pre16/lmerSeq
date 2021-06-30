@@ -1,11 +1,10 @@
 #' Function to summarize individual linear contrasts coefficients
 #'
-#' Conducts t- or F-tests on linear contrasts of regression coefficients from fits done using lmerSeq.fit function.  If the contrast matrix has only 1 row, a t-test is done.  If the contrast matrix has more than 1 row, an F-test is done
+#' Conducts t- or F-tests on linear contrasts of regression coefficients from fits done using lmerSeq.fit.gls function.  If the contrast matrix has only 1 row, a t-test is done.  If the contrast matrix has more than 1 row, an F-test is done
 #'
-#' @param lmerSeq_results Results object from running lmerSeq.fit
+#' @param lmerSeq_results Results object from running lmerSeq.fit.gls
 #' @param contrast_mat Numeric matrix representing the contrast to be tested.  Matrix must have the same number of columns as the number of coefficients in the model.  If the matrix has multiple rows, a simultaneous F-test will be done
 #' @param p_adj_method Method for adjusting for multiple comparisons (default is Benjamini-Hochberg). See p.adjust.methods
-#' @param ddf Method for computing degrees of freedom and t-statistics. Options are "Satterthwaite" and "Kenward-Roger"
 #' @param sort_results Should the results table be sorted by adjusted p-value?
 #'
 #' @examples
@@ -17,18 +16,18 @@
 #' vst_expr <- vst_expr[1:10, ]
 #'
 #' ##  Fit the Model
-#' fit_lmerSeq <- lmerSeq.fit(form = ~ group * time + (1|ids),
+#' fit.lmerSeq.gls <- lmerSeq.fit.gls(form = ~ group * time,
+#'                            cor_str = corCompSymm(form = ~ 1 | id),
 #'                            expr_mat = vst_expr,
 #'                            sample_data = sample_meta_data,
-#'                            REML = T)
+#'                            method = 'REML')
 #'
 #'
 #' ##  1 dimensional contrast (t-test)
 #' cont_mat1 <- rbind(c(0, 1, 0, 1)) # group diff. at followup
-#' contrast_summary1 <- lmerSeq.contrast(lmerSeq_results = fit_lmerSeq,
+#' contrast_summary1 <- lmerSeq.contrast.gls(lmerSeq_results = fit.lmerSeq.gls,
 #'                                       contrast_mat = cont_mat1,
 #'                                       p_adj_method = 'BH',
-#'                                       ddf = 'Satterthwaite',
 #'                                       sort_results = T)
 #' print(contrast_summary1)
 #'
@@ -36,22 +35,19 @@
 #' cont_mat2 <- rbind(c(0, 1, 0, 0),
 #'                    c(0, 0, 1, 0),
 #'                    c(0, 0, 0, 1)) # simultaneous test of all coefficients
-#' contrast_summary2 <- lmerSeq.contrast(lmerSeq_results = fit_lmerSeq,
+#' contrast_summary2 <- lmerSeq.contrast.gls(lmerSeq_results = fit.lmerSeq.gls,
 #'                                       contrast_mat = cont_mat2,
 #'                                       p_adj_method = 'BH',
-#'                                       ddf = 'Satterthwaite',
 #'                                       sort_results = T)
 #' print(contrast_summary2)
 #'
 #' @export
 #'
 
-lmerSeq.contrast <- function(lmerSeq_results = NULL, # Results object from running lmerSeq.fit
-                            contrast_mat = NULL, # Numeric matrix representing the contrast to be tested.  Matrix must have the same number of columns as the number of coefficients in the model.  If the matrix has multiple rows, a simultaneous F-test will be done
-                            p_adj_method = "BH", # Method for adjusting for multiple comparisons (default is Benjamini-Hochberg)
-                            ddf = "Satterthwaite", # Method for computing degrees of freedom and t-statistics. Options are "Satterthwaite" and "Kenward-Roger"
-                            sort_results = T, # Should the results table be sorted by adjusted p-value?
-                            include_singular = F # Should genes with singular fits be included in the results?
+lmerSeq.contrast.gls <- function(lmerSeq_results = NULL, # Results object from running lmerSeq.fit.gls
+                                 contrast_mat = NULL, # Numeric matrix representing the contrast to be tested.  Matrix must have the same number of columns as the number of coefficients in the model.  If the matrix has multiple rows, a simultaneous F-test will be done
+                                 p_adj_method = "BH", # Method for adjusting for multiple comparisons (default is Benjamini-Hochberg)
+                                 sort_results = T # Should the results table be sorted by adjusted p-value?
 ){
   n_fits = length(lmerSeq_results)
   idx_tmp = 1
@@ -61,9 +57,10 @@ lmerSeq.contrast <- function(lmerSeq_results = NULL, # Results object from runni
   if(idx_tmp > n_fits){
     stop("Model fits for all genes are null")
   }
-  coef_names <- names(lme4::fixef(lmerSeq_results[[idx_tmp]]$fit))
+  coef_names <- names(lmerSeq_results[[idx_tmp]]$fit$coefficients)
   gene_names <- do.call(c, lapply(lmerSeq_results, function(x){return(x$gene)}))
   colnames(contrast_mat) <- coef_names
+  form_sub = lmerSeq_results[[idx_tmp]]$formula
   ############################################################################################################
   #Error Messages for insufficient or inconsistent information
   ############################################################################################################
@@ -71,9 +68,9 @@ lmerSeq.contrast <- function(lmerSeq_results = NULL, # Results object from runni
     stop("Invalid p_adj_method")
   }
 
-  if(!(ddf %in% c("Satterthwaite", "Kenward-Roger"))){
-    stop("Invalid ddf method")
-  }
+  # if(!(ddf %in% c("Satterthwaite", "Kenward-Roger"))){
+  #   stop("Invalid ddf method")
+  # }
 
   if(ncol(contrast_mat) != length(coef_names)){
     stop("Number of columns in the contrast matrix does not match number of model coefficients")
@@ -87,7 +84,7 @@ lmerSeq.contrast <- function(lmerSeq_results = NULL, # Results object from runni
       return(T)
     }
     else{
-      return(lme4::isSingular(x$fit))
+      return(is.character(x$fit$apVar) | abs(getVarCov(x$fit)[1, 2]) < 1e-5)
     }
   }))
   genes_singular_fits <- gene_names[idx_singular]
@@ -96,18 +93,25 @@ lmerSeq.contrast <- function(lmerSeq_results = NULL, # Results object from runni
     if(is.null(x)){
       return(NA)
     }
-    cont_sub <- lmerTest::contest(x$fit, L = contrast_mat, joint = joint_flag, ddf = ddf)
-    return(cont_sub)
+    else if(is.character(x$fit$apVar) | abs(getVarCov(x$fit)[1, 2]) < 1e-5){
+      return(NA)
+    }
+    else{
+      cont_sub = satt_test_gls_lmerSeq(L = contrast_mat,
+                                       gls.mod = x$fit,
+                                       data = x$data,
+                                       joint = joint_flag,
+                                       form_fit = x$formula)
+      return(cont_sub)
+    }
   }))
-  if(include_singular == F){
-    ret[idx_singular, ] = NA
-  }
+  ret[idx_singular, ] = NA
   ret <- data.frame(gene = gene_names, ret)
   if(joint_flag){
-    names(ret)[7] <- 'p_val_raw'
+    names(ret)[5] <- 'p_val_raw'
   }
   else{
-    names(ret)[8] <- 'p_val_raw'
+    names(ret)[6] <- 'p_val_raw'
   }
   ret <- ret %>% mutate(p_val_adj = p.adjust(p_val_raw, method = p_adj_method))
   if(sort_results){
@@ -119,7 +123,7 @@ lmerSeq.contrast <- function(lmerSeq_results = NULL, # Results object from runni
   ret2 <- list(contrast_mat = contrast_mat,
                summary_table = ret,
                singular_fits = genes_singular_fits,
-               ddf = ddf,
+               # ddf = ddf,
                p_adj_method = p_adj_method)
   return(ret2)
 }

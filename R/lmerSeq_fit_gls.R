@@ -1,14 +1,13 @@
-
 #' Function to Fit linear mixed models to transformed RNA-Seq data
 #'
-#' Wrapper function that its linear mixed models to (transformed) RNA-Seq data using the utilities present in the lme4 package.
+#' Wrapper function that its linear mixed models to (transformed) RNA-Seq data using the utilities present using the gls function from the nlme package.
 #'
-#' @param form A one-sided linear formula describing both the fixed-effects and random-effects parts of the model using the syntax of the lme4 package
+#' @param form A one-sided linear formula describing both the fixed-effects part of the model using the syntax of the nlme package
+#' @param cor_str Correlation structure defined as one of the corStruct options available in the nlme package
 #' @param expr_mat A (G x N) numeric matrix or data frame of transformed RNA-seq counts (e.g. using VST from DESeq2), with genes in rows and samples in columns. G = number of genes.  N = number of samples.
 #' @param gene_names An optional character vector of gene names (length G).  If unspecified, row names from the expression matrix will be used.
 #' @param sample_data Data frame with N rows containing the fixed- and random-effects terms included in the formula.  The rows of the data frame must correspond (and be in the same order as) the columns of the expression matrix.
-#' @param REML Should the models be fit with REML or regular ML?
-#' @param weights An optional (G x N) numeric matrix of weights to be used in the model fitting
+#' @param method Should the models be fit with REML or regular ML?
 #' @param parallel If on Mac or linux, use forking (via mclapply) to parallelize fits
 #' @param cores Number of cores to use (default is 2)
 #'
@@ -21,21 +20,24 @@
 #' vst_expr <- vst_expr[1:10, ]
 #'
 #' ##  Fit the Model
-#' fit.lmerSeq <- lmerSeq.fit(form = ~ group * time + (1|ids),
+#' fit.lmerSeq.gls <- lmerSeq.fit.gls(form = ~ group * time,
+#'                            cor_str = corCompSymm(form = ~ 1 | id),
 #'                            expr_mat = vst_expr,
 #'                            sample_data = sample_meta_data,
-#'                            REML = T)
+#'                            method = 'REML')
 #'
 #' @export
 #'
-lmerSeq.fit <- function(form = NULL, # Formula for fixed effects
-                        expr_mat = NULL, # Matrix of transformed RNA-Seq counts where rows are genes and columns are samples
-                        gene_names = NULL, # A vector of gene names (the length of the number of rows in the expression matrix).  If unspecified, rownames from the expression matrix will be used.
-                        sample_data = NULL, # A data frame with sample meta data
-                        weights = NULL, # Matrix of same dimension as expr_mat with gene-specific weights for each sample
-                        REML = T, # Fit mixed models using REML or ML
-                        parallel = F,
-                        cores = 2
+
+lmerSeq.fit.gls <- function(form = NULL, # Formula for fixed effects
+                            cor_str = NULL, # Correlation structure defined as one of the corStruct options available in the nlme package
+                            expr_mat = NULL, # Matrix of transformed RNA-Seq counts where rows are genes and columns are samples
+                            gene_names = NULL, # A vector of gene names (the length of the number of rows in the expression matrix).  If unspecified, rownames from the expression matrix will be used.
+                            sample_data = NULL, # A data frame with sample meta data
+                            weights = NULL, # Matrix of same dimension as expr_mat with gene-specific weights for each sample
+                            method = "REML", # Fit mixed models using REML or ML
+                            parallel = F,
+                            cores = 2
 ){
 
   ############################################################################################################
@@ -52,6 +54,9 @@ lmerSeq.fit <- function(form = NULL, # Formula for fixed effects
 
   if(is.null(sample_data)==T ) {
     stop("sample_data is missing.")}
+
+  if(is.null(cor_str)==T ) {
+    stop("correlation structure is missing.")}
 
   ### Inconsistent information ###
 
@@ -87,18 +92,20 @@ lmerSeq.fit <- function(form = NULL, # Formula for fixed effects
   if(parallel == F){
     if(is.null(weights)){
       ret <- pbapply::pblapply(X = 1:nrow(expr_mat),
+                               # ret <- lapply(X = 1:nrow(expr_mat),
                                FUN = function(i){
 
                                  dat_sub <- cbind(sample_data, data.frame(expr = as.numeric(expr_mat[i, ])))
                                  ret_sub <- tryCatch({
-                                   tmp1 <- suppressMessages(lmerTest::lmer(formula = form_sub,
-                                                                           data = dat_sub,
-                                                                           REML = REML))
+                                   tmp1 <- suppressMessages(nlme::gls(model = form_sub,
+                                                                      correlation = cor_str,
+                                                                      data = dat_sub,
+                                                                      method = method))
                                  }, error = function(e) {
                                    ret_sub2 <- NULL
                                  })
 
-                                 ret2 <- list(fit = ret_sub, gene = gene_names[i])
+                                 ret2 <- list(fit = ret_sub, gene = gene_names[i], formula = form_sub, data = dat_sub)
                                })
     }
     else{
@@ -106,15 +113,20 @@ lmerSeq.fit <- function(form = NULL, # Formula for fixed effects
                                FUN = function(i){
                                  dat_sub <- cbind(sample_data, data.frame(expr = as.numeric(expr_mat[i, ]),
                                                                           weights_sub = weights[i, ]))
+
                                  ret_sub <- tryCatch({
-                                   tmp1 <- suppressMessages(lmerTest::lmer(formula = form_sub,
-                                                                           data = dat_sub,
-                                                                           REML = REML,
-                                                                           weights = weights_sub))
+                                   tmp1 <- suppressMessages(nlme::gls(model = form_sub,
+                                                                      correlation = cor_str,
+                                                                      data = dat_sub,
+                                                                      REML = REML,
+                                                                      weights = weights_sub))
                                  }, error = function(e) {
                                    ret_sub2 <- NULL
                                  })
-                                 ret2 <- list(fit = ret_sub, gene = gene_names[i])
+                                 ret2 <- list(fit = ret_sub,
+                                              gene = gene_names[i],
+                                              formula = form_sub,
+                                              data = dat_sub)
 
                                })
     }
@@ -124,15 +136,17 @@ lmerSeq.fit <- function(form = NULL, # Formula for fixed effects
       ret = parallel::mclapply(1:nrow(expr_mat), mc.silent = T, mc.cores = cores, function(i){
 
         dat_sub <- cbind(sample_data, data.frame(expr = as.numeric(expr_mat[i, ])))
+
         ret_sub <- tryCatch({
-          tmp1 <- suppressMessages(lmerTest::lmer(formula = form_sub,
-                                                  data = dat_sub,
-                                                  REML = REML))
+          tmp1 <- suppressMessages(nlme::gls(model = form_sub,
+                                             correlation = cor_str,
+                                             data = dat_sub,
+                                             REML = REML))
         }, error = function(e) {
           ret_sub2 <- NULL
         })
 
-        ret2 <- list(fit = ret_sub, gene = gene_names[i])
+        ret2 <- list(fit = ret_sub, gene = gene_names[i], formula = form_sub, data = dat_sub)
       })
     }
     else{
@@ -141,15 +155,17 @@ lmerSeq.fit <- function(form = NULL, # Formula for fixed effects
         dat_sub <- cbind(sample_data,
                          data.frame(expr = as.numeric(df_combined[i, 1:n_samples]),
                                     weights_sub = as.numeric(df_combined[i, (n_samples+1):(2*n_samples)])))
+
         ret_sub <- tryCatch({
-          tmp1 <- suppressMessages(lmerTest::lmer(formula = form_sub,
-                                                  data = dat_sub,
-                                                  REML = REML,
-                                                  weights = weights_sub))
+          tmp1 <- suppressMessages(nlme::gls(model = form_sub,
+                                             correlation = cor_str,
+                                             data = dat_sub,
+                                             REML = REML,
+                                             weights = weights_sub))
         }, error = function(e) {
           ret_sub2 <- NULL
         })
-        ret2 <- list(fit = ret_sub, gene = gene_names[i])
+        ret2 <- list(fit = ret_sub, gene = gene_names[i], formula = form_sub, data = dat_sub)
 
       })
     }

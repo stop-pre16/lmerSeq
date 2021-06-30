@@ -15,6 +15,10 @@
 #' @importFrom dplyr arrange
 #' @importFrom gtools smartbind
 #' @importFrom parallel mclapply
+#' @importFrom nlme gls
+#' @importFrom nlme getVarCov
+#' @importFrom nlme glsEstimate
+#' @importFrom numDeriv jacobian
 #'
 #'
 #' @docType package
