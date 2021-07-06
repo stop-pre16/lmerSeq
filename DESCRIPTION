@@ -19,7 +19,7 @@ Imports: pbapply,
         nlme,
         numDeriv
 URL: https//github.com/stop-pre16/lmerSeq
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Suggests: 
     knitr,
     rmarkdown
