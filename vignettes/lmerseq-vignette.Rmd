@@ -50,7 +50,7 @@ The three main functions in the ```lmerSeq``` package are ```lmerSeq.fit```, whi
 | parallel        |If on Mac or Linux, use forking (via mclapply) to parallelize fits.| FALSE |
 | cores        | Number of cores to use if using parallelizing fits. | 2 |
 
-### lmerSeq_summary
+### lmerSeq.summary
 #### _Required Arguments_
 
 | Argument       | Description | 
@@ -68,7 +68,7 @@ The three main functions in the ```lmerSeq``` package are ```lmerSeq.fit```, whi
 | ddf        | Method for computing degrees of freedom and t-statistics. Options are "Satterthwaite" and "Kenward-Roger".| "Satterthwaite" |
 | sort_results        |Should the results table be sorted by adjusted p-value? | TRUE|
 
-### lmerSeq_contrast
+### lmerSeq.contrast
 #### _Required Arguments_
 
 | Argument       | Description | 
