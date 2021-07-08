@@ -29,7 +29,7 @@ Y_{gij} &\sim& \mathcal{N}(\mu_{gij}, \sigma_g^2) \\
 where $\mu_{gij}$ is the mean transformed expression of gene $g$ in subject $i$ at observation $j$ and $\sigma_g^2$ is the variance parameter for gene $g$. $\boldsymbol{\beta_g}$ is a $p$ by 1 vector of fixed effect regression coefficients for gene $g$, $X_{ij}$ is a row vector of fixed effects covariates for subject $i$ at observation $j$, and $\mathbf{b}_{gi}$ is a vector of random intercept for gene $g$ and subject $i$. We assume that for each gene $g$, the subject-specific random effects have a multivariate normal distribution with mean $\mathbf{0}$ and variance-covariance matrix $\boldsymbol{\Sigma}_{bg}$.
 
 ## Overview of Functions in the lmerSeq Package
-The three main functions in the ```lmerSeq``` package are ```lmerSeq.fit```, which is used to fit lmerSeq models, ```lmerSeq_summary```, which is used to summarize individual regression coefficients, and ```lmerSeq_contrast```, which is used to summarize individual linear contrasts coefficients.  Each function has several required arguments and options which are described below.
+The three main functions in the ```lmerSeq``` package are ```lmerSeq.fit```, which is used to fit lmerSeq models, ```lmerSeq.summary```, which is used to summarize individual regression coefficients, and ```lmerSeq.contrast```, which is used to summarize individual linear contrasts coefficients.  Each function has several required arguments and options which are described below.
 
 ### lmerSeq.fit
 #### _Required Arguments_
