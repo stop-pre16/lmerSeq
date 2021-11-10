@@ -104,8 +104,11 @@ lmerSeq.fit.gls <- function(form = NULL, # Formula for fixed effects
                                  }, error = function(e) {
                                    ret_sub2 <- NULL
                                  })
-
-                                 ret2 <- list(fit = ret_sub, gene = gene_names[i], formula = form_sub, data = dat_sub)
+                                 suppressWarnings(lavaSearch2::sCorrect(ret_sub, df = TRUE, numeric.derivative=TRUE) <- FALSE)
+                                 ret2 <- list(fit = ret_sub,
+                                              gene = gene_names[i],
+                                              formula = form_sub,
+                                              data = dat_sub)
                                })
     }
     else{
@@ -123,6 +126,7 @@ lmerSeq.fit.gls <- function(form = NULL, # Formula for fixed effects
                                  }, error = function(e) {
                                    ret_sub2 <- NULL
                                  })
+                                 suppressWarnings(lavaSearch2::sCorrect(ret_sub, df = TRUE, numeric.derivative=TRUE) <- FALSE)
                                  ret2 <- list(fit = ret_sub,
                                               gene = gene_names[i],
                                               formula = form_sub,
@@ -145,8 +149,11 @@ lmerSeq.fit.gls <- function(form = NULL, # Formula for fixed effects
         }, error = function(e) {
           ret_sub2 <- NULL
         })
-
-        ret2 <- list(fit = ret_sub, gene = gene_names[i], formula = form_sub, data = dat_sub)
+        suppressWarnings(lavaSearch2::sCorrect(ret_sub, df = TRUE, numeric.derivative=TRUE) <- FALSE)
+        ret2 <- list(fit = ret_sub,
+                     gene = gene_names[i],
+                     formula = form_sub,
+                     data = dat_sub)
       })
     }
     else{
@@ -165,7 +172,11 @@ lmerSeq.fit.gls <- function(form = NULL, # Formula for fixed effects
         }, error = function(e) {
           ret_sub2 <- NULL
         })
-        ret2 <- list(fit = ret_sub, gene = gene_names[i], formula = form_sub, data = dat_sub)
+        suppressWarnings(lavaSearch2::sCorrect(ret_sub, df = TRUE, numeric.derivative=TRUE) <- FALSE)
+        ret2 <- list(fit = ret_sub,
+                     gene = gene_names[i],
+                     formula = form_sub,
+                     data = dat_sub)
 
       })
     }

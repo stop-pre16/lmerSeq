@@ -267,3 +267,105 @@ satt_test_gls_lmerSeq <- function(L, gls.mod, data, joint=FALSE, eps = sqrt(.Mac
     }
   }
 }
+
+# Combined function for single or multiple DF tests
+satt_test_gls_lava <- function(L, gls.mod, data, joint=FALSE, eps = sqrt(.Machine$double.eps)){
+
+
+  object = gls.mod
+  # Do not use the small sample bias correction from lavaSearch
+  # suppressWarnings(sCorrect(object, df = TRUE, numeric.derivative=TRUE) <- FALSE)
+
+  ######################################
+  # Get Coefficient Names
+  ######################################
+  ## *** mean coefficients
+  mean.coef <- stats::coef(object)
+
+  var.coef <- c(sigma2 = stats::sigma(object)^2)
+  if(!is.null(object$modelStruct$varStruct)){
+    var.coef <- c(var.coef,
+                  stats::coef(object$modelStruct$varStruct, unconstrained = FALSE, allCoef = FALSE)^2)
+  }
+
+  if(!is.null(object$modelStruct$corStruct)){
+    cor.coef <- stats::coef(object$modelStruct$corStruct, unconstrained = FALSE)
+
+    n.var <- length(var.coef)
+    n.cor <- length(cor.coef)
+
+    ## check unstructured covariance matrix
+    if(!is.null(object$modelStruct$varStruct) && ((n.var*(n.var-1))/2 == n.cor)){
+
+      vecgroup <- attr(unclass(object$modelStruct$corStruct), "group")
+      veccov.cor <- unname(unlist(attr(object$modelStruct$corStruct, "covariate")))
+      veccov.var <- attr(object$modelStruct$varStruct, "groups")
+
+      table.covvar <- table(veccov.cor,veccov.var)
+      newlevels.cor <- colnames(table.covvar)[apply(table.covvar, 1, which.max)]
+      veccov.cor2 <- factor(veccov.cor, levels = 0:max(veccov.cor), labels = newlevels.cor)
+
+      if(identical(as.character(veccov.cor2),as.character(veccov.var))){
+
+        cor.coefName <- apply(utils::combn(newlevels.cor, m = 2), MARGIN = 2, FUN = paste, collapse = "")
+        names(cor.coef) <- paste0("corCoef",cor.coefName)
+
+      }else{
+        names(cor.coef) <- paste0("corCoef",1:length(cor.coef))
+      }
+
+
+    }else{
+      names(cor.coef) <- paste0("corCoef",1:length(cor.coef))
+    }
+
+
+  }else{
+    cor.coef <- NULL
+  }
+
+  p <- c(mean.coef, cor.coef, var.coef)
+  attr(p, "mean.coef") <- names(mean.coef)
+  attr(p, "var.coef") <- names(var.coef)
+  attr(p, "cor.coef") <- names(cor.coef)
+
+  ###############################################
+  # Update and create names for contrast mat
+  # Create the null hypothesis vector
+  ###############################################
+  # lavaSearch2 requires the var-cov params to be included in the contrast mat
+  L_new <- L
+
+  for(i in 1:(length(var.coef)+length(cor.coef))){L_new <- cbind(L_new, 0)}
+
+  colnames(L_new) <- names(p)
+
+  rhs <- rep(0, nrow(L_new))
+
+  ###############################################
+  # Perform the test
+  ##3############################################
+  resTest <- lavaSearch2::compare2(object=object,
+                      contrast = L_new,
+                      null=rhs, df=T,
+                      robust=F)
+
+
+  # If L is a single row / single contrast
+  if (nrow(L_new)==1){
+
+    mk_ttable_gls(estimate = resTest$estimate[,1], se = resTest$estimate[,2], ddf = resTest$parameter)
+
+  }else{
+    # Perform multiple DF F test
+    temp <- gsub('df1 = ', '', names(resTest$parameter))
+    temp <- as.numeric(gsub(', df2', '', temp))
+
+    mk_Ftable_gls(Fvalue=resTest$statistic, ndf=temp, ddf=resTest$parameter)
+  }
+}
+
+
+
+
+

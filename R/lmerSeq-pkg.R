@@ -19,6 +19,8 @@
 #' @importFrom nlme getVarCov
 #' @importFrom nlme glsEstimate
 #' @importFrom numDeriv jacobian
+#' @importFrom lavaSearch2 sCorrect
+#' @importFrom lavaSearch2 compare2
 #'
 #'
 #' @docType package
