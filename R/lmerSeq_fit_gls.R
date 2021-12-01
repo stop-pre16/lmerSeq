@@ -101,10 +101,12 @@ lmerSeq.fit.gls <- function(form = NULL, # Formula for fixed effects
                                                                       correlation = cor_str,
                                                                       data = dat_sub,
                                                                       method = method))
+                                   suppressWarnings(lavaSearch2::sCorrect(tmp1, df = TRUE, numeric.derivative=TRUE) <- FALSE)
+                                   tmp1
                                  }, error = function(e) {
                                    ret_sub2 <- NULL
                                  })
-                                 suppressWarnings(lavaSearch2::sCorrect(ret_sub, df = TRUE, numeric.derivative=TRUE) <- FALSE)
+                                 # suppressWarnings(lavaSearch2::sCorrect(ret_sub, df = TRUE, numeric.derivative=TRUE) <- FALSE)
                                  ret2 <- list(fit = ret_sub,
                                               gene = gene_names[i],
                                               formula = form_sub,

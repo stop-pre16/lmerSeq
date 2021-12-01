@@ -84,16 +84,18 @@ lmerSeq.contrast.gls.lava <- function(lmerSeq_results = NULL, # Results object f
       return(T)
     }
     else{
-      return(is.character(x$fit$apVar) | abs(getVarCov(x$fit)[1, 2]) < 1e-5)
+      # return(is.character(x$fit$apVar) | abs(getVarCov(x$fit)[1, 2]) < 1e-5)
+      return(is.character(x$fit$apVar))
     }
   }))
   genes_singular_fits <- gene_names[idx_singular]
   ret <- do.call(rbind, pblapply(lmerSeq_results, function(x){
     # x = lmerSeq_results[[1]]
-    if(is.null(x)){
+    if(is.null(x$fit)){
       return(NA)
     }
-    else if(is.character(x$fit$apVar) | abs(getVarCov(x$fit)[1, 2]) < 1e-5){
+    # else if(is.character(x$fit$apVar) | abs(getVarCov(x$fit)[1, 2]) < 1e-5){
+    else if(is.character(x$fit$apVar)){
       return(NA)
     }
     else{
