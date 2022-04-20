@@ -41,7 +41,7 @@ fit.lmerSeq.gls <- lmerSeq.fit.gls(form = ~ group * time,
 
 ##  1 dimensional contrast (t-test)
 cont_mat1 <- rbind(c(0, 1, 0, 1)) # group diff. at followup
-contrast_summary1 <- lmerSeq.contrast.gls(lmerSeq_results = fit.lmerSeq.gls,
+contrast_summary1 <- lmerSeq.contrast.gls.lava(lmerSeq_results = fit.lmerSeq.gls,
                                       contrast_mat = cont_mat1,
                                       p_adj_method = 'BH',
                                       sort_results = T)
