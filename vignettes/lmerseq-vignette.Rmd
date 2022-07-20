@@ -88,7 +88,7 @@ The three main functions in the ```lmerSeq``` package are ```lmerSeq.fit```, whi
 
 
 ## An Example lmerSeq Analysis
-We will perform an analysis using data simulated from a negative binomial distribution and then transformed using the ```vst``` function in the ```DESeq2``` package. This dataset is included in the package and contains transformed expression data for 10 subjects (ids 1 to 10): 5 control subjects (group = 0) and 5 treatment subjects (group = 1). All subjects are measured at 2 timepoints, baseline (time = 0) and follow-up (time = 1).  The dataset contains 14,916 genes, around 20\% of which were simulated to have changes in expression from baseline to follow up in the treatment group only. For this example, we will subset the datsaet to 1000 genes for this analysis. First load the data:
+We will perform an analysis using data simulated from a negative binomial distribution and then transformed using the ```vst``` function in the ```DESeq2``` package. This dataset is included in the package and contains transformed expression data for 10 subjects (ids 1 to 10): 5 control subjects (group = 0) and 5 treatment subjects (group = 1). All subjects are measured at 2 timepoints, baseline (time = 0) and follow-up (time = 1).  The dataset contains 14,916 genes, around 20\% of which were simulated to have changes in expression from baseline to follow up in the treatment group only. For this example, we will subset the datsaet to 500 genes for this analysis. First load the data:
 
 ```{r}
 # Load the library
@@ -150,7 +150,7 @@ Model coefficients can be more easily summarized with the ```lmerSeq.summary``` 
                               p_adj_method = 'BH',
                               ddf = 'Satterthwaite',
                               sort_results = F)
- model_sum_time <- lmerSeq.summary(lmerSeq_results = fit.lmerSeq,
+ model_sum_group <- lmerSeq.summary(lmerSeq_results = fit.lmerSeq,
                               coefficient = "group",
                               p_adj_method = 'BH',
                               ddf = 'Satterthwaite',
