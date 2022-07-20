@@ -163,7 +163,7 @@ head(model_sum_time$summary_table)
 ```
 Along with information about the function call, the resulting summary object contains a list of genes whose corresponding models were singular, and a summary table. For each gene, the summary table displays the model estimate, standard error, degree of freedom, t-value, and raw and adjusted p-values. Values for genes with singular models or models that did not converge are marked ```NA```.
 
-###Summarizing individual linear contrasts
+### Summarizing individual linear contrasts
 We are also interested in the following contrasts or linear combinations of regression parameters:
 
 - $\beta_{g1} + \beta_{g3} = 0$ tests for differences in expression between the treatment and the control group at follow-up
