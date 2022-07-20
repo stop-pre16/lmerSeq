@@ -142,7 +142,7 @@ names(fit.lmerSeq[[1]])
 The resulting lmerSeq object is a list with elements for every gene in the expression matrix. Each gene element contains two items. The first item, ```fit``` is an object of class ```lmerModLmerTest```  (see ```lmerTest``` package) which contains information concerning the model fit. The item ```gene``` contains the genename (or rowname from the expression matrix if gene names were not provided).
 
 ### Summarizing Results
-Model coefficients can be more easily summarized with the ```lmSeq.summary``` function, which calculates and tabulates adjusted p-values, as well as other results. The coefficient of interest can be passed to the function either as a numeric indicator or character string. In calculating adjusted p-values, you can choose between various adjustment methods (see ```p.adjust.methods)``` and two degree of freedom methods (Satterthwaite or Kenward-Roger). The resulting table can also be sorted by adjusted p-value by setting the ```sort_results``` option to ```TRUE```.
+Model coefficients can be more easily summarized with the ```lmerSeq.summary``` function, which calculates and tabulates adjusted p-values, as well as other results. The coefficient of interest can be passed to the function either as a numeric indicator or character string. In calculating adjusted p-values, you can choose between various adjustment methods (see ```p.adjust.methods)``` and two degree of freedom methods (Satterthwaite or Kenward-Roger). The resulting table can also be sorted by adjusted p-value by setting the ```sort_results``` option to ```TRUE```.
 ```{r}
  ##  Summarize the group and time coefficient
  model_sum_time <- lmerSeq.summary(lmerSeq_results = fit.lmerSeq,
@@ -170,7 +170,7 @@ We are also interested in the following contrasts or linear combinations of regr
 
 - $\beta_{g1}=0 \text{ or }\beta_{g2} = 0 \text{ or }\beta_{g3} = 0$ simultaneously tests all of the coefficients
 
-The ```lmerSeq_contrast``` function allows users to specify custom contrasts that are either one dimensional or multi-dimensional. If the contrast matrix has only one row, a t-test is executed while if the contrast matrix has more than 1 row, an F-test is used. The contrast matrix must have the same number of columns as fixed effects and if more than one row is supplied, each row should correspond to a contrast to be simultaneously tested with the other supplied contrasts.
+The ```lmerSeq.contrast``` function allows users to specify custom contrasts that are either one dimensional or multi-dimensional. If the contrast matrix has only one row, a t-test is executed while if the contrast matrix has more than 1 row, an F-test is used. The contrast matrix must have the same number of columns as fixed effects and if more than one row is supplied, each row should correspond to a contrast to be simultaneously tested with the other supplied contrasts.
 
 The function calculates adjusted p-values according to the adjustment method you choose (see ```p.adjust.methods)```. You can also specify the method for the degree of freedom calculation (Satterthwaite or Kenward-Roger). The resulting contrast summary table can also be sorted by adjusted p-value by setting the ```sort_results``` option to ```TRUE```. 
 
@@ -205,6 +205,6 @@ names(contrast_summary1)
 
 head(contrast_summary2$summary_table)
 ```
-Like with the ```lmerSeq_summary``` function, the object produced by the ```lmerSeq_contrast``` function contains information about the function call, a list of genes whose corresponding models were singular, and a summary table. For one dimensional contrasts, the summary table displays the contrast estimate and 95\% confidence limits, standard error, degrees of freedom, t-value, and raw and adjusted p-values. For multi-contrasts tests, the summary table contains the sum of squares and mean sum of squares, numerator and denominator degrees of freedom, the F-statistic, and raw and adjusted p-values. In both tables values for genes with singular models or models that did not converge are marked ```NA```.
+Like with the ```lmerSeq.summary``` function, the object produced by the ```lmerSeq.contrast``` function contains information about the function call, a list of genes whose corresponding models were singular, and a summary table. For one dimensional contrasts, the summary table displays the contrast estimate and 95\% confidence limits, standard error, degrees of freedom, t-value, and raw and adjusted p-values. For multi-contrasts tests, the summary table contains the sum of squares and mean sum of squares, numerator and denominator degrees of freedom, the F-statistic, and raw and adjusted p-values. In both tables values for genes with singular models or models that did not converge are marked ```NA```.
 
 
