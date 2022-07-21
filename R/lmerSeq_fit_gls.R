@@ -21,7 +21,7 @@
 #'
 #' ##  Fit the Model
 #' fit.lmerSeq.gls <- lmerSeq.fit.gls(form = ~ group * time,
-#'                            cor_str = corCompSymm(form = ~ 1 | id),
+#'                            cor_str = nlme::corCompSymm(form = ~ 1 | ids),
 #'                            expr_mat = vst_expr,
 #'                            sample_data = sample_meta_data,
 #'                            method = 'REML')
