@@ -15,8 +15,8 @@ devtools::install_github("stop-pre16/lmerSeq", build_vignettes = T)
 ## Tutorials
 Tutorials are available in the Tutorials directory of the repository. The following tutorials are available:
 - [Detailed tutorial for lmerSeq analysis of a simulated dataset with detailed explanation of each function](https://htmlpreview.github.io/?https://github.com/stop-pre16/lmerSeq/blob/master/Tutorials/lmerSeq_vignette.html)
-- Simple analysis of a publicly available dataset using random effects
-- Generalized least squares models and using correlation structures
+- [Simple analysis of a publicly available dataset using random effects](https://htmlpreview.github.io/?https://github.com/stop-pre16/lmerSeq/blob/master/Tutorials/CS_shock_tutorial.html)
+- Generalized least squares models and using correlation structures (in progress)
 
 In addition, a detailed vignette with an example analysis, can be viewed in R:
 ```
