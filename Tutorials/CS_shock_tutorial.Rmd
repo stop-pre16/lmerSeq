@@ -1,0 +1,225 @@
+---
+title: "lmerSeq: Cardiogenic Shock Example"
+author: "Camille Moore"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    toc: true # table of content true
+    toc_depth: 2  # upto three depths of headings (specified by #, ## and ###)
+    number_sections: true  ## if you want number sections at each table header
+    highlight: tango  # specifies the syntax highlighting style
+    fig_width: 8
+    fig_height: 5 
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(warning = FALSE, 
+                      message = FALSE,
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+In the following tutorial, we provide an example analysis on publicly available RNAseq data (GEO Dataset GSE131411). This dataset includes RNAseq of whole blood from 11 cardiogenic shock patients at three time points: 1) within 16 hours of ICU admission, 2) 48 hours after admission, and 3) 7 days after admission or at discharge. In this analysis we will compare expression betweeen the 3 time points. This study has been fully described in the following paper: 
+
+Braga D, Barcella M, Herpain A, Aletti F, Kistler EB, Bollen Pinto B, Bendjelid K, Barlassina C. A longitudinal study highlights shared aspects of the transcriptomic response to cardiogenic and septic shock. Crit Care. 2019;23(1):1–14. https://doi.org/10.1186/s13054-019-2670-8.
+
+# Load Libraries and Normalize the Data
+Data can be found in the cs_dataset.RDS file in the Tutorials directory of our github repository.
+
+First, we will normalize the raw count data using the ```vst``` function in the ```DESeq2``` package. 
+
+```{r message=FALSE}
+# Load the libraries
+library(lmerSeq)
+library(DESeq2)
+
+# Load the data
+dat <- readRDS('cs_dataset.RDS')
+
+names(dat)
+# sample_data has information about the the study design
+# each row is a sample and corresponds to a column
+# in the expression matrix (counts)
+sample_data <- dat$sample_data
+head(sample_data)
+
+# The expression matrix (counts) has the same number of columns as
+# rows in sample_data.  The columns of the counts matrix
+# are in the same order as the rows of the metadata.
+counts <- dat$counts
+head(counts[,1:5])
+
+# Filter out lowly expressed genes
+# Retain those with at least 1 CPM in 11 samples
+cpm_counts=edgeR::cpm(counts)
+cpm_more1<-apply(cpm_counts, 1, function(x) sum(x>1))
+idx_keep=which(cpm_more1>=11)
+counts=counts[idx_keep,]
+
+# Normalize the filtered data using DESeq2's VST
+dds <- DESeqDataSetFromMatrix(countData = counts,
+                                  colData = sample_data,
+                                  design = ~ time)
+dds <- DESeq(dds)
+vsd.fixed <- varianceStabilizingTransformation(dds, blind=F)
+vst_expr <- assay(vsd.fixed)
+   
+```
+The goal of our analysis will be to identify genes that have expression changes over time. For this example, the model will use a random intercept and no other random effects. Thus, we will fit the following model to the data:
+
+\begin{eqnarray}
+ \label{eq:sim_data}
+Y_{gij} &\sim& \mathcal{N}(\mu_{gij}, \sigma_g^2) \\
+\mu_{gij} &=& \beta_{g0} + \beta_{g1} I_{T_{1ij}} + \beta_{g2} I_{T_{2ij}} + b_{gi}  \nonumber \\
+b_{gi} &\sim& \mathcal{N}(0, \sigma_{gb}^2) \nonumber
+\end{eqnarray}
+ where $I_{T_{1ij}}$ is an indicator function that equals 1 if obseervation $j$ for subject $i$ is in the first (48 hour) follow up, $I_{T_{2ij}}$ is a similar indicator for if observation $j$ is the second (1 week) follow-up, and $b_{gi}$ is the random intercept for gene $g$ and subject $i$. 
+ 
+## Fitting the Model
+To fit the model, we use the lmerSeq.fit function. The ```expr_mat``` argument takes a data frame or matrix of transformed RNA-seq counts, the columns of which must be in the same order as the rows of ```sample_data``` data frame, which contains metadata on each sample.  Fixed and random effects are passed to the ```form``` argument using the syntax of the ```lme4``` package and must be included in the ```sample_data``` data frame. By default, the lmerSeq.fit will use rownames of the counts matrix to identify genes.  If you would like to use a different set of gene names, you can supply a character vector of names in the same order as the rows of the counts matrix to the gene_names option.  If you are using Mac or Linux and would like to use use forking (via ```mclapply```) to parallelize fits, the ```parrallel``` argument should be set to ```TRUE``` and the number of cores to be used should be passed to the ```cores``` argument. Finally, if you would like to use regular maximum likelihood (ML) instead of restricted maximum likelihood (REML), set the ```REML``` argument to ```FALSE```.
+```{r}
+ ##  Fit the Model - this will take several minutes
+ fit.lmerSeq <- lmerSeq.fit(form = ~ time + (1|patient),
+                            expr_mat = vst_expr,
+                            sample_data = sample_data,
+                            REML = T)
+# Look at lmerSeq.fit object
+class(fit.lmerSeq)
+#Length is number of genes
+length(fit.lmerSeq) 
+# Names for individual element
+names(fit.lmerSeq[[1]])
+```
+The resulting lmerSeq object is a list with elements for every gene in the expression matrix. Each gene element contains two items. The first item, ```fit``` is an object of class ```lmerModLmerTest```  (see ```lmerTest``` package) which contains information concerning the model fit. The item ```gene``` contains the genename (or rowname from the expression matrix if gene names were not provided).
+
+## Testing Contrasts
+We are interested performing the following 3 statistical tests: 
+
+- $\beta_{g1} = 0$ tests for differences in expression between the 48 hour follow up and baseline
+
+- $\beta_{g2} = 0$ tests for differences in expression between the 1 week follow up and baseline
+
+- $\beta_{g2} - \beta_{g1} = 0$ tests for differences in expression between the 1 week follow up and the 48 hour follow up
+
+The ```lmerSeq.contrast``` function allows users to specify custom contrasts that are either one dimensional or multi-dimensional. If the contrast matrix has only one row, a t-test is executed while if the contrast matrix has more than 1 row, an F-test is used. The contrast matrix must have the same number of columns as fixed effects and if more than one row is supplied, each row should correspond to a contrast to be simultaneously tested with the other supplied contrasts.
+
+The function calculates adjusted p-values according to the adjustment method you choose (see ```p.adjust.methods)```. You can also specify the method for the degree of freedom calculation (Satterthwaite or Kenward-Roger). The resulting contrast summary table can also be sorted by adjusted p-value by setting the ```sort_results``` option to ```TRUE```. 
+
+The fixed effects in the contrast matrix must be in the same order specified by the model formula.  If you are unsure of the ordering, you can look at the design matrix for any gene model fit in the lmerSeq fit object.  To see the design matrix:
+```{r}
+# Look at the fixed effects design matrix to develop the contrast_mat
+head(model.matrix(fit.lmerSeq[[1]]$fit))
+
+contrasts=list(
+  c1 = c(0,1,0),
+  c2 = c(0,0,1),
+  c3 = c(0,-1,1)
+) 
+
+# Test each contrast separately using an lapply statement
+all_contrasts=lapply(contrasts, function(contrast){
+      test=lmerSeq.contrast(fit.lmerSeq, contrast=rbind(contrast),sort_results = F)
+      test
+    })
+
+names(all_contrasts)=names(contrasts)
+ 
+# Look at summary object
+names(all_contrasts$c1)
+head(all_contrasts$c1$summary_table)
+
+# Tabulate the number of DEGs for each contrast
+table(all_contrasts$c1$summary_table$p_val_adj < 0.05)
+table(all_contrasts$c2$summary_table$p_val_adj < 0.05)
+table(all_contrasts$c3$summary_table$p_val_adj < 0.05)
+```
+We find that most of the differential expression occurs in our second contrast, the test for differences in expression between the 1 week follow up and baseline.  
+
+To perform a multiple degree of freedom F-test (for any changes in expression over time), the following code can be used:
+```{r}
+ ##  F-test for for all coefficients
+ cont_mat2 <- rbind(c(0, 1, 0),
+                    c(0, 0, 1)) 
+ contrast_summary2 <- lmerSeq.contrast(lmerSeq_results = fit.lmerSeq,
+                                       contrast_mat = cont_mat2,
+                                       p_adj_method = 'BH',
+                                       ddf = 'Satterthwaite',
+                                       sort_results = T)
+#Look at summary object
+names(contrast_summary2)
+head(contrast_summary2$summary_table)
+
+# Number of DEGs
+table(contrast_summary2$summary_table$p_val_adj < 0.05)
+```
+
+The object produced by the ```lmerSeq.contrast``` function contains information about the function call, a list of genes whose corresponding models were singular, and a summary table. For one dimensional contrasts, the summary table displays the contrast estimate and 95\% confidence limits, standard error, degrees of freedom, t-value, and raw and adjusted p-values. For multi-contrast tests, the summary table contains the sum of squares and mean sum of squares, numerator and denominator degrees of freedom, the F-statistic, and raw and adjusted p-values. In both tables values for genes with singular models or models that did not converge are marked ```NA```.
+
+## Evaluating Model Assumptions
+Evaluating the goodness of fit and modeling assumptions across thousands of genes is challenging. We suggest considering the number of singular fits, as well as violations of normality and homogeneity of variance assumptions for residuals.
+
+### Singular Model Fits
+Models are singular if one or more random effect variance component is estimated to be 0. lmerSeq automatically returns ```NA``` values for singular models in results tables.  However, if a large proportion of model fits are singular, it may suggest that the model was too complex for the available data and simplification by removing some of the fixed and/or random effects terms may be warranted.  The number of singular fits can be found as follows:
+```{r}
+# Number of singular fits
+length(contrast_summary2$singular_fits)
+
+# Proportion of singular fits
+length(contrast_summary2$singular_fits)/nrow(contrast_summary2$summary_table)
+```
+Since the proportion of singular fits is small in this example, we simply exclude the singular fits from our results.
+
+### Diagnositic Statistics for Residuals
+Since ```lmerSeq.fit``` returns the model fit for each gene, any R package or function for evaluating linear mixed model fits for merMod objects, including the performance and DHARMa R packages, can be used to test model assumptions.  In addition, functions like ks.test and leveneTest from the car package are also be useful for quickly evaluating normality of residuals and equality of variance assumptions. 
+
+The ks.test function in the stats package performs the Kolmogorov-Smirnov test, which can be used to assess deviations from normality and can be applied to lmerSeq model fits as follows: 
+```{r message=FALSE}
+# KS test for normality
+ks <- lapply(fit.lmerSeq, function(x) ks.test(residuals(x$fit, scale=T), 'pnorm')$p.value)
+table(unlist(ks) < 0.05) 
+table(p.adjust(unlist(ks), method='BH')<0.05) 
+
+```
+The leveneTest function in the car package can be used to test for heteroskedasticity between grouping variables.  This test can be performed across all the model fits using an lapply statement as follows:
+```{r message=FALSE}
+library(car)
+# Levine's test for heteroskedasticity
+lt <- lapply(fit.lmerSeq, function(x) leveneTest(residuals(x$fit, scale=T)~factor(sample_data$time))$`Pr(>F)`[1])
+table(unlist(lt) < 0.05) 
+table(p.adjust(unlist(lt), method='BH')<0.05) 
+```
+
+Given the large number of genes, it is likely that some will have unadjusted p-values less than 0.05 by chance alone.  Therefore, we suggest visually inspecting quantile-quantile and residual plots for differentially expressed genes with significant Kolmogorov-Smirnov or Levene p-values. 
+
+```{r}
+# Plot residuals for DEGs (p_val_adj < 0.05) and significant Levene or KS tests
+
+# Genes to investigate
+genes <- which((lt < 0.05 | ks < 0.05) &
+               contrast_summary2$summary_table$p_val_adj < 0.05 &
+               is.na(contrast_summary2$summary_table$p_val_adj)==F)
+genes_names <- contrast_summary2$summary_table$gene[genes]
+
+par(mfrow=c(2,6))
+for(i in genes){
+  print(plot(fit.lmerSeq[[i]]$fit, main = contrast_summary2$summary_table$gene[i]))}
+```
+
+More in depth testing and exploration of individual genes can also be performed using the DHARMa package.
+```{r}
+# Explore model fit using DHARMa
+library(DHARMa)
+simulationOutput <- simulateResiduals(fit.lmerSeq[[25]]$fit)
+plot(simulationOutput)
+
+```
+
+
+
+
+
