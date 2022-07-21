@@ -20,5 +20,5 @@ Tutorials are available in the Tutorials directory of the repository. The follow
 
 In addition, a detailed vignette with an example analysis, can be viewed in R:
 ```
-vignette("lmerSeq-vignette")
+vignette("lmerseq-vignette")
 ```
