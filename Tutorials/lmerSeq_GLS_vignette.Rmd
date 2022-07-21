@@ -1,0 +1,193 @@
+---
+title: 'lmerSeq: GLS Correlation Structures'
+author: "Camille Moore"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    toc: true # table of content true
+    toc_depth: 2  # upto three depths of headings (specified by #, ## and ###)
+    number_sections: true  ## if you want number sections at each table header
+    highlight: tango  # specifies the syntax highlighting style
+    fig_width: 8
+    fig_height: 5 
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(warning = FALSE, 
+                      message = FALSE,
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+In the following tutorial, we illustrate how to account for repeated measures using correlation structures instead of random effects.  We will use the same simulated dataset as in the detailed vignette. 
+
+# Model Specification
+To model the observed RNA-Seq count data, we first transform the counts using a normalizing transformation such as the variance stabilizing transformation offered in the ```vst``` function in ```DESeq2```. We model the transformed data using a linear mixed model.  To account for correlation, we can allow random effects to be included in the model or use generalized least squares methods (GLS) to specify a correlation structure for the errors. Let $Y_{gi} = \{Y_{gi1}, Y_{g2},\dots, Y_{gn_i} \}$ be the vector of transformed expression values of gene $g$ from subject $i$ at time points $1 \dots n_i$, then
+
+\begin{eqnarray}
+\label{eqn:glmm}
+Y_{gi} &\sim& \mathcal{MVN}(\boldsymbol{\mu}_{gi}, \Sigma_g) \\
+\boldsymbol{\mu}_{gi} &=& X_{i}\boldsymbol{\beta_g} \\
+\end{eqnarray}
+
+
+where $\boldsymbol{\mu}_{gi}$ is the vector of mean transformed expression values of gene $g$ in subject $i$ and $\Sigma_g$ is the covariance matrix for gene $g$. $\boldsymbol{\beta_g}$ is a $p$ by 1 vector of fixed effect regression coefficients for gene $g$, $X_{i}$ is a $n_i$ by $p$ matrix vector of fixed effects covariates for subject $i$. Correlation between repeated measures is accounted for through choice of an appropriate structure for $\Sigma_g$.  Common choices include compound symmetric, autoregressive and unstructured. 
+
+## Example of a Compound Symmetric Covariance Matrix
+$\sigma_g^2 \begin{bmatrix} 1.0 & \rho_g & \rho_g & \rho_g \\ & 1.0 & \rho_g & \rho_g \\ & & 1.0 & \rho_g \\ & & & 1.0 \end{bmatrix}$
+
+## Example of a First Order Autoregressive Covariance Matrix
+$\sigma_g^2 \begin{bmatrix} 1.0 & \rho_g & \rho_g^2 & \rho_g^3 \\ & 1.0 & \rho_g & \rho_g^2 \\ & & 1.0 & \rho_g \\ & & & 1.0 \end{bmatrix}$
+
+## Example of an Unstructured Covariance Matrix
+$\begin{bmatrix} \sigma_{g1}^2 & \sigma_{g12} & \sigma_{g13} &\sigma_{g14} \\ & \sigma_{g2}^2 & \sigma_{g23} & \sigma_{g24} \\ & & \sigma_{g3}^2 & \sigma_{g34} \\ & & & \sigma_{g4}^2 \end{bmatrix}$
+
+# Overview of GLS Functions in the lmerSeq Package
+The two main GLS functions in the ```lmerSeq``` package are ```lmerSeq.fit.gls```, which is used to fit lmerSeq GLS models and ```lmerSeq.contrast.gls```, which is used to summarize individual regression coefficients and test individual linear contrasts. Each function has several required arguments and options which are described below.
+
+## lmerSeq.fit.gls
+### _Required Arguments_
+
+| Argument       | Description | 
+| :-------------- | :---------------------------------------------------| 
+| form         | One-sided linear formula describing both the fixed-effects parts of the model using the syntax of the ```nlme``` package. |   
+| cor_str         | Correlation structure defined as one of the corStruct options available in the ``nlme package``. Currently ``corSymm`` and ``corCompSymm`` are available.|   
+| expr_mat  | (G x N) numeric matrix or data frame of transformed RNA-seq counts (e.g. using ```vst``` from ```DESeq2```), with genes in rows and samples in columns. G = number of genes.  N = number of samples. | 
+| sample_data    | Data frame with N rows containing the fixed- and random-effects terms included in the formula.  The rows of the data frame must correspond (and be in the same order as) the columns of the expression matrix.|
+
+
+### _Aditional Arguments_
+
+| Option               | Description                                         | Default |
+| :---------------------- | :--------------------------------------------------- | :----------------|
+| gene_names         | An optional character vector of gene names (length G).  If unspecified, row names from the expression matrix will be used. | NULL | 
+| method        | Should the models be fit with REML or regular ML?| REML |
+| parallel        |If on Mac or Linux, use forking (via mclapply) to parallelize fits.| FALSE |
+| cores        | Number of cores to use if using parallelizing fits. | 2 |
+
+
+## lmerSeq.contrast.gls
+### _Required Arguments_
+
+| Argument       | Description | 
+| :-------------- | :---------------------------------------------------| 
+| lmerSeq_results         | Results object from running lmerSeq.fit.gls. |        
+| contrast_mat  | Numeric matrix representing the contrast to be tested.  Matrix must have the same number of columns as the number of coefficients in the model.  If the matrix has multiple rows, a simultaneous F-test will be done. | 
+
+
+
+### _Aditional Arguments_
+
+| Option               | Description                                         | Default |
+| :---------------------- | :--------------------------------------------------- | :----------------|
+| p_adj_method        | Method for adjusting for multiple comparisons (default is Benjamini-Hochberg). | "BH"| 
+| sort_results        |Should the results table be sorted by adjusted p-value? | TRUE|
+
+# An Example lmerSeq Analysis
+We will perform an analysis using data simulated from a negative binomial distribution and then transformed using the ```vst``` function in the ```DESeq2``` package. This dataset is included in the package and contains transformed expression data for 10 subjects (ids 1 to 10): 5 control subjects (group = 0) and 5 treatment subjects (group = 1). All subjects are measured at 2 timepoints, baseline (time = 0) and follow-up (time = 1).  The dataset contains 14,916 genes, around 20\% of which were simulated to have changes in expression from baseline to follow up in the treatment group only. For this example, we will subset the datsaet to 500 genes for this analysis. First load the data:
+
+```{r}
+# Load the library
+library(lmerSeq)
+library(nlme)
+# Load the data
+data("expr_data")
+names(expr_example)
+# sample_meta_data has information about the the study design
+# each row is a sample and corresponds to a column
+# in the expression matrix (vst_expr)
+sample_meta_data <- expr_example$sample_meta_data
+sample_meta_data
+# The expression matrix (vst_expr) has the same number of columns as
+# rows in metadata.  The columns of the counts matrix
+# are in the same order as the rows of the metadata.
+vst_expr <- expr_example$vst_expr[1:500,]
+head(vst_expr)
+```
+The goal of our analysis will be to compare changes over time between the control and treatment groups. For this example, we will fit the model will using a compound symmetric error structure and again using an unstructured covariance matrix. We will fit the following basic model to the data:
+
+\begin{eqnarray}
+\label{eqn:simdata}
+Y_{gi} &\sim& \mathcal{MVN}((\mu_{gi0}, \mu_{gi1})', \Sigma_g) \\
+\mu_{gij} &=& \beta_{g0} + \beta_{g1} I_{T_i} + \beta_{g2} I_{F_{ij}} + \beta_{g3}I_{T_i} I_{F_{ij}} \\
+\end{eqnarray}
+
+where $I_{T_i}$ is an indicator function that equals 1 if subject $i$ is in the treatment group and $I_{F_{ij}}$ is a similar indicator for if observation $j$ is the follow-up. 
+ 
+## Fitting the Model
+To fit the model, we use the lmerSeq.fit.gls function. The ```expr_mat``` argument takes a data frame or matrix of transformed RNA-seq counts, the columns of which must be in the same order as the rows of ```sample_data``` data frame, which contains metadata on each sample.  Fixed effects are passed to the ```form``` argument using the syntax of the ```nlme``` package and must be included in the ```sample_data``` data frame. The ``cor_str`` is a correlation structure defined by one of corStruct options available in the ``nlme`` package. For this example, we will use ``corCompSymm`` and ``corSymm`` structures to utilize compound symmetric and unstructured covariance matrices. By default, the lmerSeq.fit will use rownames of the counts matrix to identify genes.  If you would like to use a different set of gene names, you can supply a character vector of names in the same order as the rows of the counts matrix to the gene_names option.  If you are using Mac or Linux and would like to use use forking (via ```mclapply```) to parallelize fits, the ```parrallel``` argument should be set to ```TRUE``` and the number of cores to be used should be passed to the ```cores``` argument. Finally, if you would like to use regular maximum likelihood (ML) instead of restricted maximum likelihood (REML), set the ```REML``` argument to ```FALSE```.
+```{r}
+ ##  Fit the Compound Symmetric Model
+ fit.lmerSeq.cs <- lmerSeq.fit.gls(form = ~ group * time ,
+                            cor_str = corCompSymm(form = ~ 1 | ids),
+                            expr_mat = vst_expr,
+                            sample_data = sample_meta_data)
+
+
+# Look at lmerSeq.fit object
+class(fit.lmerSeq.cs)
+#Length is number of genes
+length(fit.lmerSeq.cs) 
+# Names for individual element
+names(fit.lmerSeq.cs[[1]])
+# Summary of model fit for the first gene
+summary(fit.lmerSeq.cs[[1]]$fit)
+
+##  Fit the Unstructured Model
+ fit.lmerSeq.un <- lmerSeq.fit.gls(form = ~ group * time ,
+                            cor_str = corSymm(form = ~ 1 | ids),
+                            expr_mat = vst_expr,
+                            sample_data = sample_meta_data)
+ 
+ summary(fit.lmerSeq.un[[1]]$fit)
+
+ 
+```
+The resulting lmerSeq object is a list with elements for every gene in the expression matrix. Each gene element contains two items. The first item, ```fit``` is an object of class ```glsObject```  (see ```nlme``` package) which contains information concerning the model fit. The item ```gene``` contains the genename (or rowname from the expression matrix if gene names were not provided).
+
+## Testing and Summarizing Contrasts
+We are interested in the following contrasts or linear combinations of regression parameters:
+
+- $\beta_{g1} + \beta_{g3} = 0$ tests for differences in expression between the treatment and the control group at follow-up
+
+- $\beta_{g1}=0 \text{ or }\beta_{g2} = 0 \text{ or }\beta_{g3} = 0$ simultaneously tests all of the coefficients
+
+The ```lmerSeq.contrast.gls``` function allows users to specify custom contrasts that are either one dimensional or multi-dimensional. If the contrast matrix has only one row, a t-test is executed while if the contrast matrix has more than 1 row, an F-test is used. The contrast matrix must have the same number of columns as fixed effects and if more than one row is supplied, each row should correspond to a contrast to be simultaneously tested with the other supplied contrasts.
+
+The function calculates adjusted p-values according to the adjustment method you choose (see ```p.adjust.methods)```. The Satterthwaite method is used to calculate degreeees of freeedom. The resulting contrast summary table can also be sorted by adjusted p-value by setting the ```sort_results``` option to ```TRUE```. 
+
+The fixed effects in the contrast matrix must be in the same order specified by the model formula.  If you are unsure of the ordering, you can look at the design matrix for any gene model fit in the lmerSeq fit object.  To see the design matrix:
+```{r}
+# Look at the ordering of the fixed effects coefficients to develop the contrast_mat
+coefficients(fit.lmerSeq.cs[[1]]$fit)
+ ##  Contrast 1: t-test for difference in expression between groups at follow-up
+ cont_mat1 <- rbind(c(0, 1, 0, 1)) 
+ contrast_summary1 <- lmerSeq.contrast.gls(lmerSeq_results = fit.lmerSeq.cs,
+                                       contrast_mat = cont_mat1,
+                                       p_adj_method = 'BH',
+                                       sort_results = T)
+#Look at summary object
+names(contrast_summary1)
+head(contrast_summary1$summary_table)
+
+ ##  Contrast 2: F-test for for all coefficients
+ cont_mat2 <- rbind(c(0, 1, 0, 0),
+                    c(0, 0, 1, 0),
+                    c(0, 0, 0, 1)) 
+ contrast_summary2 <- lmerSeq.contrast.gls(lmerSeq_results = fit.lmerSeq.cs,
+                                       contrast_mat = cont_mat2,
+                                       p_adj_method = 'BH',
+                                       sort_results = T)
+#Look at summary object
+names(contrast_summary1)
+head(contrast_summary2$summary_table)
+```
+The object produced by the ```lmerSeq.contrast.gls``` function contains information about the function call, a list of genes whose corresponding models were singular, and a summary table. For one dimensional contrasts, the summary table displays the contrast estimate and 95\% confidence limits, standard error, degrees of freedom, t-value, and raw and adjusted p-values. For multi-contrasts tests, the summary table contains the sum of squares and mean sum of squares, numerator and denominator degrees of freedom, the F-statistic, and raw and adjusted p-values. In both tables values for genes with singular models or models that did not converge are marked ```NA```.
+
+
+

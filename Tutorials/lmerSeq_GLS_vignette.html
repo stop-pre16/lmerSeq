@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Camille Moore" />
+
+<meta name="date" content="2022-07-21" />
+
+<title>lmerSeq: GLS Correlation Structures</title>
+
+<script src="data:application/javascript;base64,Ly8gUGFuZG9jIDIuOSBhZGRzIGF0dHJpYnV0ZXMgb24gYm90aCBoZWFkZXIgYW5kIGRpdi4gV2UgcmVtb3ZlIHRoZSBmb3JtZXIgKHRvCi8vIGJlIGNvbXBhdGlibGUgd2l0aCB0aGUgYmVoYXZpb3Igb2YgUGFuZG9jIDwgMi44KS4KZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignRE9NQ29udGVudExvYWRlZCcsIGZ1bmN0aW9uKGUpIHsKICB2YXIgaHMgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJkaXYuc2VjdGlvbltjbGFzcyo9J2xldmVsJ10gPiA6Zmlyc3QtY2hpbGQiKTsKICB2YXIgaSwgaCwgYTsKICBmb3IgKGkgPSAwOyBpIDwgaHMubGVuZ3RoOyBpKyspIHsKICAgIGggPSBoc1tpXTsKICAgIGlmICghL15oWzEtNl0kL2kudGVzdChoLnRhZ05hbWUpKSBjb250aW51ZTsgIC8vIGl0IHNob3VsZCBiZSBhIGhlYWRlciBoMS1oNgogICAgYSA9IGguYXR0cmlidXRlczsKICAgIHdoaWxlIChhLmxlbmd0aCA+IDApIGgucmVtb3ZlQXR0cmlidXRlKGFbMF0ubmFtZSk7CiAgfQp9KTsK"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  background-color: #f8f8f8; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<link rel="stylesheet" href="data:text/css,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" type="text/css" />
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">lmerSeq: GLS Correlation Structures</h1>
+<h4 class="author">Camille Moore</h4>
+<h4 class="date">2022-07-21</h4>
+
+
+<div id="TOC">
+<ul>
+<li><a href="#model-specification"><span class="toc-section-number">1</span> Model Specification</a>
+<ul>
+<li><a href="#example-of-a-compound-symmetric-covariance-matrix"><span class="toc-section-number">1.1</span> Example of a Compound Symmetric Covariance Matrix</a></li>
+<li><a href="#example-of-a-first-order-autoregressive-covariance-matrix"><span class="toc-section-number">1.2</span> Example of a First Order Autoregressive Covariance Matrix</a></li>
+<li><a href="#example-of-an-unstructured-covariance-matrix"><span class="toc-section-number">1.3</span> Example of an Unstructured Covariance Matrix</a></li>
+</ul></li>
+<li><a href="#overview-of-gls-functions-in-the-lmerseq-package"><span class="toc-section-number">2</span> Overview of GLS Functions in the lmerSeq Package</a>
+<ul>
+<li><a href="#lmerseq.fit.gls"><span class="toc-section-number">2.1</span> lmerSeq.fit.gls</a></li>
+<li><a href="#lmerseq.contrast.gls"><span class="toc-section-number">2.2</span> lmerSeq.contrast.gls</a></li>
+</ul></li>
+<li><a href="#an-example-lmerseq-analysis"><span class="toc-section-number">3</span> An Example lmerSeq Analysis</a>
+<ul>
+<li><a href="#fitting-the-model"><span class="toc-section-number">3.1</span> Fitting the Model</a></li>
+<li><a href="#testing-and-summarizing-contrasts"><span class="toc-section-number">3.2</span> Testing and Summarizing Contrasts</a></li>
+</ul></li>
+</ul>
+</div>
+
+<p>In the following tutorial, we illustrate how to account for repeated measures using correlation structures instead of random effects. We will use the same simulated dataset as in the detailed vignette.</p>
+<div id="model-specification" class="section level1" number="1">
+<h1 number="1"><span class="header-section-number">1</span> Model Specification</h1>
+<p>To model the observed RNA-Seq count data, we first transform the counts using a normalizing transformation such as the variance stabilizing transformation offered in the <code>vst</code> function in <code>DESeq2</code>. We model the transformed data using a linear mixed model. To account for correlation, we can allow random effects to be included in the model or use generalized least squares methods (GLS) to specify a correlation structure for the errors. Let <span class="math inline">\(Y_{gi} = \{Y_{gi1}, Y_{g2},\dots, Y_{gn_i} \}\)</span> be the vector of transformed expression values of gene <span class="math inline">\(g\)</span> from subject <span class="math inline">\(i\)</span> at time points <span class="math inline">\(1 \dots n_i\)</span>, then</p>
+<p><span class="math display">\[\begin{eqnarray}
+\label{eqn:glmm}
+Y_{gi} &amp;\sim&amp; \mathcal{MVN}(\boldsymbol{\mu}_{gi}, \Sigma_g) \\
+\boldsymbol{\mu}_{gi} &amp;=&amp; X_{i}\boldsymbol{\beta_g} \\
+\end{eqnarray}\]</span></p>
+<p>where <span class="math inline">\(\boldsymbol{\mu}_{gi}\)</span> is the vector of mean transformed expression values of gene <span class="math inline">\(g\)</span> in subject <span class="math inline">\(i\)</span> and <span class="math inline">\(\Sigma_g\)</span> is the covariance matrix for gene <span class="math inline">\(g\)</span>. <span class="math inline">\(\boldsymbol{\beta_g}\)</span> is a <span class="math inline">\(p\)</span> by 1 vector of fixed effect regression coefficients for gene <span class="math inline">\(g\)</span>, <span class="math inline">\(X_{i}\)</span> is a <span class="math inline">\(n_i\)</span> by <span class="math inline">\(p\)</span> matrix vector of fixed effects covariates for subject <span class="math inline">\(i\)</span>. Correlation between repeated measures is accounted for through choice of an appropriate structure for <span class="math inline">\(\Sigma_g\)</span>. Common choices include compound symmetric, autoregressive and unstructured.</p>
+<div id="example-of-a-compound-symmetric-covariance-matrix" class="section level2" number="1.1">
+<h2 number="1.1"><span class="header-section-number">1.1</span> Example of a Compound Symmetric Covariance Matrix</h2>
+<p><span class="math inline">\(\sigma_g^2 \begin{bmatrix} 1.0 &amp; \rho_g &amp; \rho_g &amp; \rho_g \\ &amp; 1.0 &amp; \rho_g &amp; \rho_g \\ &amp; &amp; 1.0 &amp; \rho_g \\ &amp; &amp; &amp; 1.0 \end{bmatrix}\)</span></p>
+</div>
+<div id="example-of-a-first-order-autoregressive-covariance-matrix" class="section level2" number="1.2">
+<h2 number="1.2"><span class="header-section-number">1.2</span> Example of a First Order Autoregressive Covariance Matrix</h2>
+<p><span class="math inline">\(\sigma_g^2 \begin{bmatrix} 1.0 &amp; \rho_g &amp; \rho_g^2 &amp; \rho_g^3 \\ &amp; 1.0 &amp; \rho_g &amp; \rho_g^2 \\ &amp; &amp; 1.0 &amp; \rho_g \\ &amp; &amp; &amp; 1.0 \end{bmatrix}\)</span></p>
+</div>
+<div id="example-of-an-unstructured-covariance-matrix" class="section level2" number="1.3">
+<h2 number="1.3"><span class="header-section-number">1.3</span> Example of an Unstructured Covariance Matrix</h2>
+<p><span class="math inline">\(\begin{bmatrix} \sigma_{g1}^2 &amp; \sigma_{g12} &amp; \sigma_{g13} &amp;\sigma_{g14} \\ &amp; \sigma_{g2}^2 &amp; \sigma_{g23} &amp; \sigma_{g24} \\ &amp; &amp; \sigma_{g3}^2 &amp; \sigma_{g34} \\ &amp; &amp; &amp; \sigma_{g4}^2 \end{bmatrix}\)</span></p>
+</div>
+</div>
+<div id="overview-of-gls-functions-in-the-lmerseq-package" class="section level1" number="2">
+<h1 number="2"><span class="header-section-number">2</span> Overview of GLS Functions in the lmerSeq Package</h1>
+<p>The two main GLS functions in the <code>lmerSeq</code> package are <code>lmerSeq.fit.gls</code>, which is used to fit lmerSeq GLS models and <code>lmerSeq.contrast.gls</code>, which is used to summarize individual regression coefficients and test individual linear contrasts. Each function has several required arguments and options which are described below.</p>
+<div id="lmerseq.fit.gls" class="section level2" number="2.1">
+<h2 number="2.1"><span class="header-section-number">2.1</span> lmerSeq.fit.gls</h2>
+<div id="required-arguments" class="section level3" number="2.1.1">
+<h3 number="2.1.1"><span class="header-section-number">2.1.1</span> <em>Required Arguments</em></h3>
+<table>
+<colgroup>
+<col width="22%" />
+<col width="77%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Argument</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">form</td>
+<td align="left">One-sided linear formula describing both the fixed-effects parts of the model using the syntax of the <code>nlme</code> package.</td>
+</tr>
+<tr class="even">
+<td align="left">cor_str</td>
+<td align="left">Correlation structure defined as one of the corStruct options available in the <code>nlme package</code>. Currently <code>corSymm</code> and <code>corCompSymm</code> are available.</td>
+</tr>
+<tr class="odd">
+<td align="left">expr_mat</td>
+<td align="left">(G x N) numeric matrix or data frame of transformed RNA-seq counts (e.g. using <code>vst</code> from <code>DESeq2</code>), with genes in rows and samples in columns. G = number of genes. N = number of samples.</td>
+</tr>
+<tr class="even">
+<td align="left">sample_data</td>
+<td align="left">Data frame with N rows containing the fixed- and random-effects terms included in the formula. The rows of the data frame must correspond (and be in the same order as) the columns of the expression matrix.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="aditional-arguments" class="section level3" number="2.1.2">
+<h3 number="2.1.2"><span class="header-section-number">2.1.2</span> <em>Aditional Arguments</em></h3>
+<table>
+<colgroup>
+<col width="25%" />
+<col width="56%" />
+<col width="18%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Option</th>
+<th align="left">Description</th>
+<th align="left">Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">gene_names</td>
+<td align="left">An optional character vector of gene names (length G). If unspecified, row names from the expression matrix will be used.</td>
+<td align="left">NULL</td>
+</tr>
+<tr class="even">
+<td align="left">method</td>
+<td align="left">Should the models be fit with REML or regular ML?</td>
+<td align="left">REML</td>
+</tr>
+<tr class="odd">
+<td align="left">parallel</td>
+<td align="left">If on Mac or Linux, use forking (via mclapply) to parallelize fits.</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">cores</td>
+<td align="left">Number of cores to use if using parallelizing fits.</td>
+<td align="left">2</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="lmerseq.contrast.gls" class="section level2" number="2.2">
+<h2 number="2.2"><span class="header-section-number">2.2</span> lmerSeq.contrast.gls</h2>
+<div id="required-arguments-1" class="section level3" number="2.2.1">
+<h3 number="2.2.1"><span class="header-section-number">2.2.1</span> <em>Required Arguments</em></h3>
+<table>
+<colgroup>
+<col width="22%" />
+<col width="77%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Argument</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">lmerSeq_results</td>
+<td align="left">Results object from running lmerSeq.fit.gls.</td>
+</tr>
+<tr class="even">
+<td align="left">contrast_mat</td>
+<td align="left">Numeric matrix representing the contrast to be tested. Matrix must have the same number of columns as the number of coefficients in the model. If the matrix has multiple rows, a simultaneous F-test will be done.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="aditional-arguments-1" class="section level3" number="2.2.2">
+<h3 number="2.2.2"><span class="header-section-number">2.2.2</span> <em>Aditional Arguments</em></h3>
+<table>
+<colgroup>
+<col width="25%" />
+<col width="56%" />
+<col width="18%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Option</th>
+<th align="left">Description</th>
+<th align="left">Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">p_adj_method</td>
+<td align="left">Method for adjusting for multiple comparisons (default is Benjamini-Hochberg).</td>
+<td align="left">“BH”</td>
+</tr>
+<tr class="even">
+<td align="left">sort_results</td>
+<td align="left">Should the results table be sorted by adjusted p-value?</td>
+<td align="left">TRUE</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="an-example-lmerseq-analysis" class="section level1" number="3">
+<h1 number="3"><span class="header-section-number">3</span> An Example lmerSeq Analysis</h1>
+<p>We will perform an analysis using data simulated from a negative binomial distribution and then transformed using the <code>vst</code> function in the <code>DESeq2</code> package. This dataset is included in the package and contains transformed expression data for 10 subjects (ids 1 to 10): 5 control subjects (group = 0) and 5 treatment subjects (group = 1). All subjects are measured at 2 timepoints, baseline (time = 0) and follow-up (time = 1). The dataset contains 14,916 genes, around 20% of which were simulated to have changes in expression from baseline to follow up in the treatment group only. For this example, we will subset the datsaet to 500 genes for this analysis. First load the data:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the library</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lmerSeq)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(nlme)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the data</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;expr_data&quot;</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(expr_example)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;vst_expr&quot;         &quot;sample_meta_data&quot;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># sample_meta_data has information about the the study design</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># each row is a sample and corresponds to a column</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># in the expression matrix (vst_expr)</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>sample_meta_data <span class="ot">&lt;-</span> expr_example<span class="sc">$</span>sample_meta_data</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>sample_meta_data</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    group time ids</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1      0    0   1</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2      0    0   2</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3      0    0   3</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4      0    0   4</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5      0    0   5</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6      1    0   6</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7      1    0   7</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8      1    0   8</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 9      1    0   9</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10     1    0  10</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 11     0    1   1</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 12     0    1   2</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 13     0    1   3</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 14     0    1   4</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 15     0    1   5</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 16     1    1   6</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 17     1    1   7</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 18     1    1   8</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 19     1    1   9</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 20     1    1  10</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="co"># The expression matrix (vst_expr) has the same number of columns as</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="co"># rows in metadata.  The columns of the counts matrix</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="co"># are in the same order as the rows of the metadata.</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>vst_expr <span class="ot">&lt;-</span> expr_example<span class="sc">$</span>vst_expr[<span class="dv">1</span><span class="sc">:</span><span class="dv">500</span>,]</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(vst_expr)</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                1         2         3         4         5         6         7</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gene_1  9.718066 11.287075 10.424919 10.054660  9.930321  9.960479  9.838390</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gene_2  7.695786  7.634494  7.057765  7.423232  9.826636  7.173738  8.472930</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gene_3  9.068397  8.728583  8.587318  8.078244  8.300322  8.121162  8.489013</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gene_4 10.201287  9.499400 12.000497 11.394558 14.037695 15.662026 11.168083</span></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gene_5  5.420767  4.834965  7.001491  5.318385  5.419777  5.197268  6.020709</span></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gene_6  5.768313  6.306045  6.286288  5.551270  5.766971  6.749169  5.857482</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                8         9        10        11        12        13        14</span></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gene_1 10.365072 10.513962  9.842168  9.629550 11.696100 10.796711 10.533148</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gene_2  8.701982  7.572121  7.070354  6.336361  6.326748  8.889667  6.184038</span></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gene_3  8.732537  8.156784  8.390283  8.785989  8.622098  9.172592  7.896454</span></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gene_4 12.631002 13.858078 12.538125 10.327079  9.904219 13.408116 10.548494</span></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gene_5  5.197436  6.162586  6.068089  4.960007  5.315978  6.181032  5.731777</span></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gene_6  5.912008  5.994762  6.225875  6.517208  6.307201  6.202680  5.856596</span></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;               15        16        17        18        19        20</span></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gene_1 11.942505  9.353982  8.564307  8.529466  9.379239  8.922996</span></span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gene_2  6.996296  7.079122  7.789405  7.745766  7.011949  8.454777</span></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gene_3  8.444398  8.680169  8.381761  8.623554  8.382786  8.348355</span></span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gene_4 13.350749 13.445610 12.198269 12.197086 12.095550 12.076660</span></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gene_5  5.503720  5.197166  5.629334  5.464986  4.538137  5.970139</span></span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; gene_6  6.340748  6.181377  6.120376  6.094641  5.505685  6.270948</span></span></code></pre></div>
+<p>The goal of our analysis will be to compare changes over time between the control and treatment groups. For this example, we will fit the model will using a compound symmetric error structure and again using an unstructured covariance matrix. We will fit the following basic model to the data:</p>
+<p><span class="math display">\[\begin{eqnarray}
+\label{eqn:simdata}
+Y_{gi} &amp;\sim&amp; \mathcal{MVN}((\mu_{gi0}, \mu_{gi1})&#39;, \Sigma_g) \\
+\mu_{gij} &amp;=&amp; \beta_{g0} + \beta_{g1} I_{T_i} + \beta_{g2} I_{F_{ij}} + \beta_{g3}I_{T_i} I_{F_{ij}} \\
+\end{eqnarray}\]</span></p>
+<p>where <span class="math inline">\(I_{T_i}\)</span> is an indicator function that equals 1 if subject <span class="math inline">\(i\)</span> is in the treatment group and <span class="math inline">\(I_{F_{ij}}\)</span> is a similar indicator for if observation <span class="math inline">\(j\)</span> is the follow-up.</p>
+<div id="fitting-the-model" class="section level2" number="3.1">
+<h2 number="3.1"><span class="header-section-number">3.1</span> Fitting the Model</h2>
+<p>To fit the model, we use the lmerSeq.fit.gls function. The <code>expr_mat</code> argument takes a data frame or matrix of transformed RNA-seq counts, the columns of which must be in the same order as the rows of <code>sample_data</code> data frame, which contains metadata on each sample. Fixed effects are passed to the <code>form</code> argument using the syntax of the <code>nlme</code> package and must be included in the <code>sample_data</code> data frame. The <code>cor_str</code> is a correlation structure defined by one of corStruct options available in the <code>nlme</code> package. For this example, we will use <code>corCompSymm</code> and <code>corSymm</code> structures to utilize compound symmetric and unstructured covariance matrices. By default, the lmerSeq.fit will use rownames of the counts matrix to identify genes. If you would like to use a different set of gene names, you can supply a character vector of names in the same order as the rows of the counts matrix to the gene_names option. If you are using Mac or Linux and would like to use use forking (via <code>mclapply</code>) to parallelize fits, the <code>parrallel</code> argument should be set to <code>TRUE</code> and the number of cores to be used should be passed to the <code>cores</code> argument. Finally, if you would like to use regular maximum likelihood (ML) instead of restricted maximum likelihood (REML), set the <code>REML</code> argument to <code>FALSE</code>.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a> <span class="do">##  Fit the Compound Symmetric Model</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a> fit.lmerSeq.cs <span class="ot">&lt;-</span> <span class="fu">lmerSeq.fit.gls</span>(<span class="at">form =</span> <span class="sc">~</span> group <span class="sc">*</span> time ,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                            <span class="at">cor_str =</span> <span class="fu">corCompSymm</span>(<span class="at">form =</span> <span class="sc">~</span> <span class="dv">1</span> <span class="sc">|</span> ids),</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>                            <span class="at">expr_mat =</span> vst_expr,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>                            <span class="at">sample_data =</span> sample_meta_data)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Look at lmerSeq.fit object</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(fit.lmerSeq.cs)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;list&quot;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">#Length is number of genes</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(fit.lmerSeq.cs) </span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 500</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Names for individual element</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(fit.lmerSeq.cs[[<span class="dv">1</span>]])</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;fit&quot;     &quot;gene&quot;    &quot;formula&quot; &quot;data&quot;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary of model fit for the first gene</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit.lmerSeq.cs[[<span class="dv">1</span>]]<span class="sc">$</span>fit)</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Generalized least squares fit by REML</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Model: form_sub </span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Data: dat_sub </span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        AIC     BIC    logLik</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   46.61776 51.2533 -17.30888</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Correlation Structure: Compound symmetry</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Formula: ~1 | ids </span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Parameter estimate(s):</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       Rho </span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 0.4401497 </span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Coefficients:</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                 Value Std.Error  t-value p-value</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept) 10.283008 0.2754918 37.32601  0.0000</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; group       -0.178994 0.3896042 -0.45943  0.6521</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; time         0.636594 0.2915141  2.18375  0.0442</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; group:time  -1.790610 0.4122633 -4.34337  0.0005</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Correlation: </span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            (Intr) group  time  </span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; group      -0.707              </span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; time       -0.529  0.374       </span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; group:time  0.374 -0.529 -0.707</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Standardized residuals:</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        Min         Q1        Med         Q3        Max </span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; -2.0941797 -0.5859208 -0.2162497  0.6582187  1.6605062 </span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Residual standard error: 0.6160184 </span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Degrees of freedom: 20 total; 16 residual</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a><span class="do">##  Fit the Unstructured Model</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a> fit.lmerSeq.un <span class="ot">&lt;-</span> <span class="fu">lmerSeq.fit.gls</span>(<span class="at">form =</span> <span class="sc">~</span> group <span class="sc">*</span> time ,</span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>                            <span class="at">cor_str =</span> <span class="fu">corSymm</span>(<span class="at">form =</span> <span class="sc">~</span> <span class="dv">1</span> <span class="sc">|</span> ids),</span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>                            <span class="at">expr_mat =</span> vst_expr,</span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>                            <span class="at">sample_data =</span> sample_meta_data)</span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a> <span class="fu">summary</span>(fit.lmerSeq.un[[<span class="dv">1</span>]]<span class="sc">$</span>fit)</span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Generalized least squares fit by REML</span></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Model: form_sub </span></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Data: dat_sub </span></span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        AIC     BIC    logLik</span></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   46.61776 51.2533 -17.30888</span></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Correlation Structure: General</span></span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Formula: ~1 | ids </span></span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Parameter estimate(s):</span></span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Correlation: </span></span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   1   </span></span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 0.44</span></span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Coefficients:</span></span>
+<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                 Value Std.Error  t-value p-value</span></span>
+<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept) 10.283008 0.2754918 37.32601  0.0000</span></span>
+<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; group       -0.178994 0.3896042 -0.45943  0.6521</span></span>
+<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; time         0.636594 0.2915141  2.18375  0.0442</span></span>
+<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; group:time  -1.790610 0.4122632 -4.34337  0.0005</span></span>
+<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Correlation: </span></span>
+<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            (Intr) group  time  </span></span>
+<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; group      -0.707              </span></span>
+<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; time       -0.529  0.374       </span></span>
+<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; group:time  0.374 -0.529 -0.707</span></span>
+<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Standardized residuals:</span></span>
+<span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        Min         Q1        Med         Q3        Max </span></span>
+<span id="cb2-86"><a href="#cb2-86" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; -2.0941796 -0.5859207 -0.2162497  0.6582187  1.6605061 </span></span>
+<span id="cb2-87"><a href="#cb2-87" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-88"><a href="#cb2-88" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Residual standard error: 0.6160184 </span></span>
+<span id="cb2-89"><a href="#cb2-89" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Degrees of freedom: 20 total; 16 residual</span></span></code></pre></div>
+<p>The resulting lmerSeq object is a list with elements for every gene in the expression matrix. Each gene element contains two items. The first item, <code>fit</code> is an object of class <code>glsObject</code> (see <code>nlme</code> package) which contains information concerning the model fit. The item <code>gene</code> contains the genename (or rowname from the expression matrix if gene names were not provided).</p>
+</div>
+<div id="testing-and-summarizing-contrasts" class="section level2" number="3.2">
+<h2 number="3.2"><span class="header-section-number">3.2</span> Testing and Summarizing Contrasts</h2>
+<p>We are interested in the following contrasts or linear combinations of regression parameters:</p>
+<ul>
+<li><p><span class="math inline">\(\beta_{g1} + \beta_{g3} = 0\)</span> tests for differences in expression between the treatment and the control group at follow-up</p></li>
+<li><p><span class="math inline">\(\beta_{g1}=0 \text{ or }\beta_{g2} = 0 \text{ or }\beta_{g3} = 0\)</span> simultaneously tests all of the coefficients</p></li>
+</ul>
+<p>The <code>lmerSeq.contrast.gls</code> function allows users to specify custom contrasts that are either one dimensional or multi-dimensional. If the contrast matrix has only one row, a t-test is executed while if the contrast matrix has more than 1 row, an F-test is used. The contrast matrix must have the same number of columns as fixed effects and if more than one row is supplied, each row should correspond to a contrast to be simultaneously tested with the other supplied contrasts.</p>
+<p>The function calculates adjusted p-values according to the adjustment method you choose (see <code>p.adjust.methods)</code>. The Satterthwaite method is used to calculate degreeees of freeedom. The resulting contrast summary table can also be sorted by adjusted p-value by setting the <code>sort_results</code> option to <code>TRUE</code>.</p>
+<p>The fixed effects in the contrast matrix must be in the same order specified by the model formula. If you are unsure of the ordering, you can look at the design matrix for any gene model fit in the lmerSeq fit object. To see the design matrix:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Look at the ordering of the fixed effects coefficients to develop the contrast_mat</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">coefficients</span>(fit.lmerSeq.cs[[<span class="dv">1</span>]]<span class="sc">$</span>fit)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept)       group        time  group:time </span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  10.2830083  -0.1789942   0.6365944  -1.7906105</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a> <span class="do">##  Contrast 1: t-test for difference in expression between groups at follow-up</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a> cont_mat1 <span class="ot">&lt;-</span> <span class="fu">rbind</span>(<span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>)) </span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a> contrast_summary1 <span class="ot">&lt;-</span> <span class="fu">lmerSeq.contrast.gls</span>(<span class="at">lmerSeq_results =</span> fit.lmerSeq.cs,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">contrast_mat =</span> cont_mat1,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">p_adj_method =</span> <span class="st">&#39;BH&#39;</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">sort_results =</span> T)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">#Look at summary object</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(contrast_summary1)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;contrast_mat&quot;  &quot;summary_table&quot; &quot;singular_fits&quot; &quot;p_adj_method&quot;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(contrast_summary1<span class="sc">$</span>summary_table)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       gene   Estimate Std..Error       df   t.value    p_val_raw    p_val_adj</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1  gene_18 -1.1798761 0.09767387 15.94485 -12.07975 1.946366e-09 3.766336e-07</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 gene_213  1.4914738 0.11694966 15.90516  12.75313 9.127282e-10 3.766336e-07</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 gene_306  1.5584425 0.13039114 15.95064  11.95206 2.259802e-09 3.766336e-07</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 gene_339  1.5742808 0.13991376 15.77288  11.25179 6.066148e-09 7.582686e-07</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5  gene_79 -1.5133551 0.12985850 14.06518 -11.65388 1.294649e-08 1.294649e-06</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 gene_282 -0.9888268 0.09266452 15.41345 -10.67104 1.610294e-08 1.341911e-06</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a> <span class="do">##  Contrast 2: F-test for for all coefficients</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a> cont_mat2 <span class="ot">&lt;-</span> <span class="fu">rbind</span>(<span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>),</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>),</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>)) </span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a> contrast_summary2 <span class="ot">&lt;-</span> <span class="fu">lmerSeq.contrast.gls</span>(<span class="at">lmerSeq_results =</span> fit.lmerSeq.cs,</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">contrast_mat =</span> cont_mat2,</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">p_adj_method =</span> <span class="st">&#39;BH&#39;</span>,</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">sort_results =</span> T)</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="co">#Look at summary object</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(contrast_summary1)</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;contrast_mat&quot;  &quot;summary_table&quot; &quot;singular_fits&quot; &quot;p_adj_method&quot;</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(contrast_summary2<span class="sc">$</span>summary_table)</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       gene NumDF     DenDF   F.value    p_val_raw    p_val_adj</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 gene_339     3 10.951132  78.54672 1.085425e-07 5.427126e-05</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2  gene_79     3  8.269169  87.85174 1.319220e-06 2.891816e-04</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 gene_282     3  6.810262 140.08266 1.735090e-06 2.891816e-04</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 gene_314     3 11.721834  38.25030 2.457457e-06 3.071821e-04</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5  gene_53     3 12.083074  30.37023 6.577104e-06 5.480920e-04</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 gene_424     3 11.917896  31.09486 6.421423e-06 5.480920e-04</span></span></code></pre></div>
+<p>The object produced by the <code>lmerSeq.contrast.gls</code> function contains information about the function call, a list of genes whose corresponding models were singular, and a summary table. For one dimensional contrasts, the summary table displays the contrast estimate and 95% confidence limits, standard error, degrees of freedom, t-value, and raw and adjusted p-values. For multi-contrasts tests, the summary table contains the sum of squares and mean sum of squares, numerator and denominator degrees of freedom, the F-statistic, and raw and adjusted p-values. In both tables values for genes with singular models or models that did not converge are marked <code>NA</code>.</p>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
