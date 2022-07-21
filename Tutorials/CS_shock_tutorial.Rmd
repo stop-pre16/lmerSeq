@@ -80,7 +80,7 @@ b_{gi} &\sim& \mathcal{N}(0, \sigma_{gb}^2) \nonumber
 \end{eqnarray}
  where $I_{T_{1ij}}$ is an indicator function that equals 1 if obseervation $j$ for subject $i$ is in the first (48 hour) follow up, $I_{T_{2ij}}$ is a similar indicator for if observation $j$ is the second (1 week) follow-up, and $b_{gi}$ is the random intercept for gene $g$ and subject $i$. 
  
-## Fitting the Model
+# Fitting the Model
 To fit the model, we use the lmerSeq.fit function. The ```expr_mat``` argument takes a data frame or matrix of transformed RNA-seq counts, the columns of which must be in the same order as the rows of ```sample_data``` data frame, which contains metadata on each sample.  Fixed and random effects are passed to the ```form``` argument using the syntax of the ```lme4``` package and must be included in the ```sample_data``` data frame. By default, the lmerSeq.fit will use rownames of the counts matrix to identify genes.  If you would like to use a different set of gene names, you can supply a character vector of names in the same order as the rows of the counts matrix to the gene_names option.  If you are using Mac or Linux and would like to use use forking (via ```mclapply```) to parallelize fits, the ```parrallel``` argument should be set to ```TRUE``` and the number of cores to be used should be passed to the ```cores``` argument. Finally, if you would like to use regular maximum likelihood (ML) instead of restricted maximum likelihood (REML), set the ```REML``` argument to ```FALSE```.
 ```{r}
  ##  Fit the Model - this will take several minutes
@@ -97,7 +97,7 @@ names(fit.lmerSeq[[1]])
 ```
 The resulting lmerSeq object is a list with elements for every gene in the expression matrix. Each gene element contains two items. The first item, ```fit``` is an object of class ```lmerModLmerTest```  (see ```lmerTest``` package) which contains information concerning the model fit. The item ```gene``` contains the genename (or rowname from the expression matrix if gene names were not provided).
 
-## Testing Contrasts
+# Testing Contrasts
 We are interested performing the following 3 statistical tests: 
 
 - $\beta_{g1} = 0$ tests for differences in expression between the 48 hour follow up and baseline
@@ -160,10 +160,10 @@ table(contrast_summary2$summary_table$p_val_adj < 0.05)
 
 The object produced by the ```lmerSeq.contrast``` function contains information about the function call, a list of genes whose corresponding models were singular, and a summary table. For one dimensional contrasts, the summary table displays the contrast estimate and 95\% confidence limits, standard error, degrees of freedom, t-value, and raw and adjusted p-values. For multi-contrast tests, the summary table contains the sum of squares and mean sum of squares, numerator and denominator degrees of freedom, the F-statistic, and raw and adjusted p-values. In both tables values for genes with singular models or models that did not converge are marked ```NA```.
 
-## Evaluating Model Assumptions
+# Evaluating Model Assumptions
 Evaluating the goodness of fit and modeling assumptions across thousands of genes is challenging. We suggest considering the number of singular fits, as well as violations of normality and homogeneity of variance assumptions for residuals.
 
-### Singular Model Fits
+## Singular Model Fits
 Models are singular if one or more random effect variance component is estimated to be 0. lmerSeq automatically returns ```NA``` values for singular models in results tables.  However, if a large proportion of model fits are singular, it may suggest that the model was too complex for the available data and simplification by removing some of the fixed and/or random effects terms may be warranted.  The number of singular fits can be found as follows:
 ```{r}
 # Number of singular fits
@@ -174,7 +174,7 @@ length(contrast_summary2$singular_fits)/nrow(contrast_summary2$summary_table)
 ```
 Since the proportion of singular fits is small in this example, we simply exclude the singular fits from our results.
 
-### Diagnositic Statistics for Residuals
+## Diagnositic Statistics for Residuals
 Since ```lmerSeq.fit``` returns the model fit for each gene, any R package or function for evaluating linear mixed model fits for merMod objects, including the performance and DHARMa R packages, can be used to test model assumptions.  In addition, functions like ks.test and leveneTest from the car package are also be useful for quickly evaluating normality of residuals and equality of variance assumptions. 
 
 The ks.test function in the stats package performs the Kolmogorov-Smirnov test, which can be used to assess deviations from normality and can be applied to lmerSeq model fits as follows: 
