@@ -95,7 +95,7 @@ We will perform an analysis using data simulated from a negative binomial distri
 library(lmerSeq)
 
 # Load the data
-data("expr_example")
+data("expr_data")
 
 names(expr_example)
 
