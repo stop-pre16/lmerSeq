@@ -101,7 +101,7 @@ We will perform an analysis using data simulated from a negative binomial distri
 # Load the library
 library(lmerSeq)
 # Load the data
-data("expr_example")
+data("expr_data")
 names(expr_example)
 # sample_meta_data has information about the the study design
 # each row is a sample and corresponds to a column
