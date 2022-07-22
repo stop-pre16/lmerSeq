@@ -41,7 +41,7 @@ The three main functions in the ```lmerSeq``` package are ```lmerSeq.fit```, whi
 | sample_data    | Data frame with N rows containing the fixed- and random-effects terms included in the formula.  The rows of the data frame must correspond (and be in the same order as) the columns of the expression matrix.|
 
 
-#### _Aditional Arguments_
+#### _Additional Arguments_
 
 | Option               | Description                                         | Default |
 | :---------------------- | :--------------------------------------------------- | :----------------|
@@ -60,7 +60,7 @@ The three main functions in the ```lmerSeq``` package are ```lmerSeq.fit```, whi
  
 
 
-#### _Aditional Arguments_
+#### _Additional Arguments_
 
 | Option               | Description                                         | Default |
 | :---------------------- | :--------------------------------------------------- | :----------------|
@@ -78,7 +78,7 @@ The three main functions in the ```lmerSeq``` package are ```lmerSeq.fit```, whi
 
 
 
-#### _Aditional Arguments_
+#### _Additional Arguments_
 
 | Option               | Description                                         | Default |
 | :---------------------- | :--------------------------------------------------- | :----------------|
@@ -88,7 +88,7 @@ The three main functions in the ```lmerSeq``` package are ```lmerSeq.fit```, whi
 
 
 ## An Example lmerSeq Analysis
-We will perform an analysis using data simulated from a negative binomial distribution and then transformed using the ```vst``` function in the ```DESeq2``` package. This dataset is included in the package and contains transformed expression data for 10 subjects (ids 1 to 10): 5 control subjects (group = 0) and 5 treatment subjects (group = 1). All subjects are measured at 2 timepoints, baseline (time = 0) and follow-up (time = 1).  The dataset contains 14,916 genes, around 20\% of which were simulated to have changes in expression from baseline to follow up in the treatment group only. For this example, we will subset the datsaet to 500 genes for this analysis. First load the data:
+We will perform an analysis using data simulated from a negative binomial distribution and then transformed using the ```vst``` function in the ```DESeq2``` package. This dataset is included in the package and contains transformed expression data for 10 subjects (ids 1 to 10): 5 control subjects (group = 0) and 5 treatment subjects (group = 1). All subjects are measured at 2 timepoints, baseline (time = 0) and follow-up (time = 1).  The dataset contains 14,916 genes, around 20\% of which were simulated to have changes in expression from baseline to follow up in the treatment group only. For this example, we will subset the dataset to 500 genes for this analysis. First load the data:
 
 ```{r}
 # Load the library
@@ -99,7 +99,7 @@ data("expr_data")
 
 names(expr_example)
 
-# sample_meta_data has information about the the study design
+# sample_meta_data has information about the study design
 # each row is a sample and corresponds to a column
 # in the expression matrix (vst_expr)
 sample_meta_data <- expr_example$sample_meta_data
@@ -122,7 +122,7 @@ b_{gi} &\sim& \mathcal{N}(0, \sigma_{gb}^2) \nonumber
  where $I_{T_i}$ is an indicator function that equals 1 if subject $i$ is in the treatment group, $I_{F_{ij}}$ is a similar indicator for if observation $j$ is the follow-up, and $b_{gi}$ is the random intercept for gene $g$ and subject $i$. 
  
 ### Fitting the Model
-To fit the model, we use the lmerSeq.fit function. The ```expr_mat``` argument takes a data frame or matrix of transformed RNA-seq counts, the columns of which must be in the same order as the rows of ```sample_data``` data frame, which contains metadata on each sample.  Fixed and random effects are passed to the ```form``` argument using the syntax of the ```lme4``` package and must be included in the ```sample_data``` data frame. By default, the lmerSeq.fit will use rownames of the counts matrix to identify genes.  If you would like to use a different set of gene names, you can supply a character vector of names in the same order as the rows of the counts matrix to the gene_names option.  If you are using Mac or Linux and would like to use use forking (via ```mclapply```) to parallelize fits, the ```parrallel``` argument should be set to ```TRUE``` and the number of cores to be used should be passed to the ```cores``` argument. Finally, if you would like to use regular maximum likelihood (ML) instead of restricted maximum likelihood (REML), set the ```REML``` argument to ```FALSE```.
+To fit the model, we use the lmerSeq.fit function. The ```expr_mat``` argument takes a data frame or matrix of transformed RNA-seq counts, the columns of which must be in the same order as the rows of ```sample_data``` data frame, which contains metadata on each sample.  Fixed and random effects are passed to the ```form``` argument using the syntax of the ```lme4``` package and must be included in the ```sample_data``` data frame. By default, the lmerSeq.fit will use rownames of the counts matrix to identify genes.  If you would like to use a different set of gene names, you can supply a character vector of names in the same order as the rows of the counts matrix to the gene_names option.  If you are using Mac or Linux and would like to use forking (via ```mclapply```) to parallelize fits, the ```parallel``` argument should be set to ```TRUE``` and the number of cores to be used should be passed to the ```cores``` argument. Finally, if you would like to use regular maximum likelihood (ML) instead of restricted maximum likelihood (REML), set the ```REML``` argument to ```FALSE```.
 ```{r}
  ##  Fit the Model
  fit.lmerSeq <- lmerSeq.fit(form = ~ group * time + (1|ids),
